@@ -223,6 +223,13 @@ button{font-family:inherit;color:var(--o)}
 #cityBar{position:fixed;left:50%;transform:translateX(-50%);top:66px;z-index:30;display:none;gap:8px;align-items:center;background:#fffaf0;border:3px solid var(--o);border-radius:99px;padding:4px 6px 4px 14px;box-shadow:0 4px 0 var(--o);font-family:Jua;white-space:nowrap}#cityBar b{font-weight:400;font-size:16px}#cityBar small{font-size:12px;color:#8a7a9a}
 .wpol{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;font-size:13px}.wpol>div{background:#f7f3ff;border:2px solid var(--o);border-radius:12px;padding:6px 8px}.wpol>div>b{font-family:Jua;font-weight:400;font-size:15px;display:block;margin-bottom:2px}.wpol .dim{color:#a99bb8}
 @media (max-width:640px){#cityBar{top:auto;bottom:86px}}
+#grid .plot.mv{outline:4px dashed #4dabf7;outline-offset:-4px;opacity:.6}#grid .plot.drop{box-shadow:inset 0 0 0 4px #ffd84d}#grid .plot.over{box-shadow:inset 0 0 0 6px #2b8a3e;transform:scale(1.05)}
+#grid .plot.b{touch-action:none}
+#dragGhost{position:fixed;z-index:999;pointer-events:none;opacity:.85;transform:scale(1.1) rotate(-3deg);filter:drop-shadow(0 8px 6px #0004)}
+#moveBar{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:40;display:none;gap:8px;align-items:center;background:#e6f4ff;border:3px solid var(--o);border-radius:99px;padding:6px 8px 6px 16px;box-shadow:0 4px 0 var(--o);font-family:Jua;white-space:nowrap}#moveBar b{font-weight:400}#moveBar small{font-size:12px;color:#6b5b7b}
+.qtag.gold{background:linear-gradient(90deg,#ffe066,#ffb84d);animation:pls 1.2s ease-in-out infinite}
+.mkrow{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;background:#fffaf0;border:2px solid var(--o);border-radius:12px;padding:6px 8px;margin:5px 0}.mkrow b{font-family:Jua;font-weight:400}.mkrow div{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:8px 0}.dday{background:#f4f1f8;border:2px solid var(--o);border-radius:12px;text-align:center;padding:4px 2px;opacity:.6}.dday.on{background:#ffe066;opacity:1}.dday b{display:block;font-size:22px}.dday small{font-size:11px}
 </style></head><body>
 <div id="land"></div>
 <div id="stage"><div id="island"><div id="grid"></div></div></div>
@@ -1512,8 +1519,8 @@ function renderMap(newI){if(VIEW!=null&&S.terr[VIEW]!=='me'){VIEW=null;toast('�
   if(p){const hl=halted(p.t);h+=`<div class="plot b ${hl?'halt':''} ${newI===i?'new':''}" data-i="${i}" ${hl?`data-h="${CRISIS[S.crisis.f].ic}"`:''} title="${BD[p.t].n} Lv${p.lv}">${artOf(p.t)}<div class="badge">${'★'.repeat(p.lv)}</div></div>`}
   else if(un.has(i))h+=`<div class="plot empty" data-i="${i}" title="빈 땅 — 눌러서 건설"></div>`;
   else h+=`<div class="plot locked" data-i="${i}" title="성 레벨을 올리면 개척할 수 있어요">${svg(tree(i))}</div>`}
- $('#grid').innerHTML=h;placeVillagers();cityBar()}
-$('#grid').addEventListener('click',e=>{const el=e.target.closest('.plot');if(!el)return;const i=+el.dataset.i;snd('click');
+ $('#grid').innerHTML=h;placeVillagers();cityBar();markMove()}
+$('#grid').addEventListener('click',e=>{if(DRAG.done){DRAG.done=false;return}const el=e.target.closest('.plot');if(!el)return;const i=+el.dataset.i;snd('click');if(MOVE!=null)return moveTo(i);
  if(i===CASTLE)return VIEW==null?castlePanel():cityPanel();if(curP()[i])return bPanel(i);if(el.classList.contains('empty'))return buildMenu(i);toast('🌳 성을 업그레이드하면 이 땅을 개척할 수 있어요!')});
 
 /* villagers */
@@ -1536,7 +1543,7 @@ function bPanel(i){if(examGuard())return;const p=curP()[i],d=BD[p.t];const max=p
  openM(`<h2>${d.n} <span style="font-size:18px">${'★'.repeat(p.lv)}${'☆'.repeat(5-p.lv)}</span></h2><div class="big">${artOf(p.t)}</div><p style="text-align:center;margin:6px 0">${d.d}</p>
  ${halted(p.t)?`<p style="text-align:center;color:#c0392b;font-family:Jua">${CRISIS[d.f].ic} ${CRISIS[d.f].n} 때문에 멈췄어요! ${FIELDS[d.f].n} 문제를 맞혀 복구해요.</p>`:''}
  ${max?`<p style="text-align:center;font-family:Jua;font-size:18px">🏆 최고 레벨이에요!</p>`:`<div style="text-align:center;font-size:15px">${pr}${d.fx?`<div style="color:#7b5cd6">✨ ${d.fx}</div>`:''}</div><div class="req">${costHtml(c)}</div>${capped?`<p style="text-align:center;font-size:14px;color:#c0392b">성 레벨을 먼저 올려야 더 강화할 수 있어요 (성 Lv${p.lv})</p>`:''}`}
- <div class="row">${max?'':`<button class="btn green" ${capped||!canPay(c)?'disabled':''} onclick="doUp(${i})">⬆️ 업그레이드</button>`}<button class="btn sm" id="dem" onclick="demolish(${i},this)">🧹 철거</button></div>`,'bp')}
+ <div class="row">${max?'':`<button class="btn green" ${capped||!canPay(c)?'disabled':''} onclick="doUp(${i})">⬆️ 업그레이드</button>`}${p.t==='market'?`<button class="btn main" onclick="openMarket()">🏪 거래하기</button>`:''}<button class="btn blue" onclick="startMove(${i})">🔀 옮기기</button><button class="btn sm" id="dem" onclick="demolish(${i},this)">🧹 철거</button></div><p style="text-align:center;font-size:12px;color:#8a7a9a">💡 건물을 꾹 눌러 끌어다 놓아도 옮길 수 있어요</p>`,'bp')}
 function doUp(i){const p=curP()[i];const c=upCost(p);if(!canPay(c)||p.lv>=5||p.lv>=S.k+1)return;pay(c);p.lv++;snd('build');renderMap();renderTop();bPanel(i);const el=document.querySelector(`.plot[data-i="${i}"]`);if(el){el.classList.add('new');floatAt(el,'⬆️ Lv'+p.lv,'#2b8a3e')}checkQuest();save()}
 function demolish(i,b){if(!b.dataset.ok){b.dataset.ok=1;b.textContent='정말 철거할까요? (한 번 더)';return}const P=curP(),p=P[i];const back=scale(BD[p.t].cost,.3);for(const k in back)S.res[k]+=back[k];delete P[i];closeM();renderMap();renderTop();toast('🧹 철거했어요. 재료 일부를 돌려받았어요');save()}
 function castlePanel(){if(examGuard())return;const c=castleCost(),need=CR[S.k]||0,max=S.k>=10;const ok=!max&&canPay(c)&&S.total>=need;
@@ -1616,7 +1623,7 @@ function tutorial(){openM(`<h2>🏰 과학 킹덤에 온 걸 환영해요!</h2><
 let tLvl='e56';
 function drawLvg(){$('#lvg').innerHTML=Object.keys(LEVELS).map(k=>`<button class="lvb ${tLvl===k?'on':''}" onclick="tLvl='${k}';drawLvg()">${LEVELS[k][1]}<small>${LEVELS[k][0]}</small></button>`).join('')}
 function startGame(cont,b){if(cont){S=load();if(!S)return}else{const sv=load();if(sv&&b&&!b.dataset.ok){b.dataset.ok=1;b.textContent='⚠️ 기존 왕국이 사라져요! 한 번 더 누르면 새로 시작';return}const n=($('#kn').value||'').trim()||'과학 왕국';S=migrate(fresh(n,tLvl))}
- $('#title').style.display='none';started=true;VIEW=null;renderTop();fit();renderMap();renderQuest();renderCrisis();save();
+ $('#title').style.display='none';started=true;VIEW=null;setTimeout(()=>whenFree(()=>showDaily()),1500);renderTop();fit();renderMap();renderQuest();renderCrisis();save();
  if(!cont){S.seenVer=VERSION;tutorial()}else{offline();if(S.seenVer!==VERSION){S.seenVer=VERSION;save();setTimeout(()=>whenFree(showPatch),900)}}setTimeout(()=>{if(S.exam)showExam();else checkJoinLink()},300)}
 function offline(){const el=Math.min(1800,(Date.now()-S.last)/1000);if(el<60)return;const r=rates();const g={};let any=false;for(const k of RK){g[k]=Math.floor(r[k]*el/60*.5);if(g[k]>0){S.res[k]+=g[k];any=true}}if(!any)return;renderTop();
  openM(`<h2 style="text-align:center">🌙 다녀오셨어요!</h2><p style="text-align:center;margin:8px 0">${Math.floor(el/60)}분 동안 주민들이 열심히 일했어요.</p><div class="req">${RK.filter(k=>g[k]>0).map(k=>`<span class="rw">${RES[k].ic}+${fmt(g[k])}</span>`).join('')}</div><p style="text-align:center;font-size:13px;color:#8a7a9a">(자리를 비운 동안은 최대 30분, 절반만큼 모여요)</p><div class="row"><button class="btn main" onclick="closeM()">고마워요!</button></div>`,'off')}
@@ -1924,13 +1931,13 @@ function drawQ(){const F=FIELDS[Q.f];const al=allowedFields();
  const cu=curUnit(Q.f);
  openM(`<div class="qhead"><div class="chips">${chips}</div><div class="streak">${S.streak>0?`🔥 ${S.streak}연속`:''}</div></div>${uchips}
  ${S.cls?`<div class="clsbar">📚 수업 <b>${S.cls.name}</b> · 목표 ${Math.min(S.clsDone,S.cls.goal)}/${S.cls.goal}문제 ${S.clsDone>=S.cls.goal?'✅ 달성!':''}</div>`:''}
- <div class="qcard"><span class="qtag" style="background:${F.c}">${F.ic} ${F.n} · ${LEVELS[S.lvl][1]}${cu?' · '+cu:''}</span>${S.crisis&&S.crisis.f===Q.f?` <span class="qtag" style="background:#ffd6d6">${CRISIS[Q.f].ic} 복구 문제!</span>`:''}<div class="qtext">${Q.disp||Q.q}</div></div>
+ <div class="qcard"><span class="qtag" style="background:${F.c}">${F.ic} ${F.n} · ${LEVELS[S.lvl][1]}${cu?' · '+cu:''}</span>${Q.gold?' <span class="qtag gold">🌟 황금 문제! 맞히면 💰×5</span>':''}${S.crisis&&S.crisis.f===Q.f?` <span class="qtag" style="background:#ffd6d6">${CRISIS[Q.f].ic} 복구 문제!</span>`:''}<div class="qtext">${Q.disp||Q.q}</div></div>
  <div id="opts" class="${Q.type==='ox'?'ox':''}">${Q.opts.map((o,i)=>`<button class="opt" onclick="answer(${i},event)"><b>${i+1}</b><span>${o}</span></button>`).join('')}</div><div id="qres"></div>`,'quiz');markShown()}
 function reward(){const lib=sumLv('library'),sch=sumLv('school');let m=1+.1*lib+(hasT('write')?.1:0);let sm=S.streak>=5?2:S.streak>=3?1.5:1;if(sm>1)sm+=.05*sch;return{v:Math.round((10+2*S.k)*m*sm),g:Math.round((4+S.k)*m),sm}}
 function answer(i,ev){if(!Q||Q.done||i>=Q.opts.length)return;const ok=Q.opts[i]===Q.a;if(macroCheck(ok,ev))return;Q.done=true;S.tries++;clsLogPush(Q,Q.opts[i],ok);
  const btns=[...document.querySelectorAll('#opts .opt')];btns.forEach((b,j)=>{b.disabled=true;if(Q.opts[j]===Q.a)b.classList.add('ok');else if(j===i)b.classList.add('no')});
  const F=FIELDS[Q.f];let h='';
- if(ok){S.streak++;S.best=Math.max(S.best,S.streak);S.total++;S.stats[Q.f].c++;gainCorrect(Q);const r=reward();S.res[F.r]+=r.v;S.res.gold+=r.g;snd('ok');flashRes([F.r,'gold']);
+ if(ok){S.streak++;S.best=Math.max(S.best,S.streak);S.total++;S.stats[Q.f].c++;gainCorrect(Q);const r=reward();if(Q.gold){r.g*=5;r.v*=2}S.res[F.r]+=r.v;S.res.gold+=r.g;snd('ok');flashRes([F.r,'gold']);
   let cr='';if(S.crisis&&S.crisis.f===Q.f){S.crisis.n++;if(S.crisis.n>=2){const cg=60*S.k;S.res.gold+=cg;cr=`<div style="margin-top:6px;font-family:Jua;color:#2b8a3e">🛠️ ${CRISIS[Q.f].n} 복구 완료! 보물상자 💰+${cg}</div>`;S.crisis=null;pendingFix=true}else cr=`<div style="margin-top:6px;font-family:Jua;color:#c0392b">${CRISIS[Q.f].ic} 복구까지 ${2-S.crisis.n}문제 남았어요!</div>`;renderCrisis()}
   h=`<div class="res ok"><div class="stamp">참<br>잘했어요</div><h3>정답이에요! ${S.streak>=3?'🔥'+S.streak+'연속!':''}</h3><span class="rw">${F.ic}+${r.v}</span><span class="rw">💰+${r.g}</span><span class="rw">🧪연구점수+1</span>${r.sm>1?`<span class="rw" style="background:#ffe3c2">🔥×${r.sm.toFixed(2).replace(/\.?0+$/,'')}</span>`:''}<p style="margin-top:6px">💡 ${Q.ex}</p>${cr}</div>`}
  else{S.streak=0;S.stats[Q.f].w++;S.wrong.unshift(wrongRec(Q,i));S.wrong=S.wrong.slice(0,40);snd('no');
@@ -2066,7 +2073,7 @@ function openScen(){$('#title').innerHTML=`<div class="tcard"><div class="logo" 
  <p class="j" style="text-align:left">📚 문제 단계</p><div class="lvg" id="lvg"></div>
  ${SCEN.map((s,i)=>`<button class="scen" onclick="startScen(${i})"><b>${s.n}</b><small>${s.d}</small><span>⏱️ ${s.lim/60}분</span></button>`).join('')}<button class="btn" style="margin-top:8px" onclick="showTitle()">← 돌아가기</button></div>`;drawLvg()}
 function startScen(i){const sc=SCEN[i];S=migrate(fresh(sc.n.split(' ').slice(1).join(' '),tLvl));S.play=400;S.nextCrisis=S.play+300;S.lastSeason=seasonIdx();sc.setup();S.scen={i,t0:S.play,done:false};S.quest=QUESTS.length;
- $('#title').style.display='none';started=true;VIEW=null;renderTop();fit();renderMap();renderQuest();renderCrisis();save();bgmMode();
+ $('#title').style.display='none';started=true;VIEW=null;setTimeout(()=>whenFree(()=>showDaily()),1500);renderTop();fit();renderMap();renderQuest();renderCrisis();save();bgmMode();
  openM(`<h2 style="text-align:center">${sc.n}</h2><p style="text-align:center;font:20px Jua;margin:10px 0">${sc.d}</p><p style="text-align:center">⏱️ 제한 시간 ${sc.lim/60}분 · 전투에서 문제를 맞혀 이겨내요!</p><div class="row"><button class="btn main" onclick="closeM()">시작!</button></div>`,'scen')}
 function scenTick(){const s=S.scen;if(!s||s.done)return;const sc=SCEN[s.i];const el=S.play-s.t0;
  const win=sc.timeGoal?(el>=sc.lim&&sc.goal()):sc.goal();const lose=sc.timeGoal?(!sc.goal()&&el>60):(el>=sc.lim);
@@ -2194,7 +2201,7 @@ function leaveCls(){S.cls=null;S.unit=null;S.field='mix';save();renderTop();rend
 /* 문제 뽑기 (직접 낸 문제 포함) */
 function customQ(f){const qs=(S.cls&&S.cls.qs)||[];const pool=qs.filter(x=>!f||x[0]===f);if(!pool.length)return null;let p2=pool.filter(x=>!recent.includes(x[1]));if(!p2.length)p2=pool;const raw=rnd(p2);recent.push(raw[1]);if(recent.length>60)recent.shift();return variantQ({f:raw[0],q:raw[1],a:raw[2],opts:shuffle(raw.slice(2,6)),ex:raw[6],done:false,fixed:false,lv:S.lvl,custom:true})}
 function nextClassQ(f){if(S.cls&&S.cls.qs&&S.cls.qs.length){if(S.cls.only)return customQ(null);if(Math.random()<.4){const c=customQ(f);if(c)return c}}return pickQ(f)}
-function newQ(){if(examGuard())return;const al=allowedFields();let f=S.field==='mix'||!al.includes(S.field)?(S.crisis&&al.includes(S.crisis.f)&&Math.random()<.5?S.crisis.f:rnd(al)):S.field;Q=nextClassQ(f);drawQ()}
+function newQ(){if(examGuard())return;const al=allowedFields();let f=S.field==='mix'||!al.includes(S.field)?(S.crisis&&al.includes(S.crisis.f)&&Math.random()<.5?S.crisis.f:rnd(al)):S.field;Q=nextClassQ(f);Q.gold=Math.random()<.1;drawQ()}
 
 /* 2 시험 모드 */
 let examTimer=null;
@@ -2277,7 +2284,7 @@ function openSettings(){const on=!!dbUrl();openM(`<h2>⚙️ 설정</h2>
  <p style="font-size:13px;color:#8a7a9a;margin-top:10px;text-align:center">진행 상황은 이 브라우저에 자동 저장돼요.${S.cloud?' ☁️ 클라우드에도 저장 중!':''}</p>
  <div class="row"><button class="btn sm pink" onclick="if(!this.dataset.ok){this.dataset.ok=1;this.textContent='⚠️ 정말 처음부터? (한 번 더)';return}localStorage.removeItem('sk-save');location.reload()">🗑️ 처음부터 다시</button></div>`,'set')}
 function openHub(){if(examGuard())return;snd('click');const b=(ic,n,d,f)=>`<button class="hubb" onclick="${f}"><span>${ic}</span><b>${n}</b><small>${d}</small></button>`;
- openM(`<h2>📚 더보기</h2>${examAvail()?`<div class="exbanner" onclick="examIntro()">📝 <b>${esc(S.cls.name)}</b> 시험이 기다리고 있어요! (${S.cls.exam.n}문제 · ${S.cls.exam.min}분) <u>시험 보기 ▶</u></div>`:''}<div class="hub">${b('📒','연구 노트','정답률·오답·결과 코드','openReport()')}${b('🧪','기술 연구',`연구점수 ${S.rp||0}`,'openTech()')}${b('📖','과학 도감',`${Object.keys(S.dex).length}장 수집`,'openDex()')}${b('🏆','업적',`${Object.keys(S.ach).length}/${ACH.length} · ${score()}점`,'openAch()')}${S.cls&&S.cls.room?b('🏫','반 대항전','반끼리 점수 경쟁','openLeagueStu()'):''}${b('👩‍🏫','선생님 모드','수업·퀴즈쇼·온라인 반','openTeacher()')}${b('📸','사진 찍기','마을·지도 저장','openPhoto()')}${b('📢','업데이트 내용',VERSION+' 패치 노트','showPatch()')}${b('⚙️','설정','반 코드·클라우드·소리','openSettings()')}</div>`,'hub')}
+ openM(`<h2>📚 더보기</h2>${examAvail()?`<div class="exbanner" onclick="examIntro()">📝 <b>${esc(S.cls.name)}</b> 시험이 기다리고 있어요! (${S.cls.exam.n}문제 · ${S.cls.exam.min}분) <u>시험 보기 ▶</u></div>`:''}<div class="hub">${b('📒','연구 노트','정답률·오답·결과 코드','openReport()')}${b('🧪','기술 연구',`연구점수 ${S.rp||0}`,'openTech()')}${b('📖','과학 도감',`${Object.keys(S.dex).length}장 수집`,'openDex()')}${b('🏆','업적',`${Object.keys(S.ach).length}/${ACH.length} · ${score()}점`,'openAch()')}${S.cls&&S.cls.room?b('🏫','반 대항전','반끼리 점수 경쟁','openLeagueStu()'):''}${b('👩‍🏫','선생님 모드','수업·퀴즈쇼·온라인 반','openTeacher()')}${b('🏪','시장','자원 팔아 골드',"openMarket()")}${b('🎁','출석 보상',`${S.dStreak||0}일 연속`,'showDaily(true)')}${b('📸','사진 찍기','마을·지도 저장','openPhoto()')}${b('📢','업데이트 내용',VERSION+' 패치 노트','showPatch()')}${b('⚙️','설정','반 코드·클라우드·소리','openSettings()')}</div>`,'hub')}
 function showTitle(){const sv=load();const t=$('#title');t.style.display='flex';started=false;const on=!!dbUrl();
  t.innerHTML=`<div class="tcard"><div style="width:150px;height:130px;margin:0 auto">${artOf('castle',7)}</div><div class="logo">과학 <span>킹덤</span></div><p class="j" style="font-size:16px;margin:4px 0 10px">과학 문제를 풀어 나만의 왕국을 키워요!</p>
  ${sv?`<button class="btn main" style="width:100%;margin-bottom:10px" onclick="startGame(true)">▶ 이어하기 · ${esc(sv.name)} (Lv${sv.k})</button><p style="font-size:13px;margin-bottom:4px">또는 새 왕국 만들기</p>`:''}
@@ -2372,7 +2379,7 @@ function islePanel(id){snd('click');const w=WORLD[id];const o=S.terr[id];
   body=`<p style="text-align:center;font:20px Jua">🚩 우리 영토예요!</p>${inRevolt(id)?`<p style="text-align:center;color:#c0392b;font:18px Jua">🔥 반란 중! ${Math.max(0,Math.ceil((S.revolt[id]-S.play)/60))}분 뒤 독립해요 — 구휼로 민심 40 이상 또는 주둔군 30명!</p>`:''}<p style="text-align:center">생산: ${prod} <small>(민심에 따라 50~100%)</small></p>${route}
   <div class="req"><span class="rw">❤️ 민심 ${ly}</span><span class="rw">🏯 주둔군 ${fmt(tc(G.t))}명</span><span class="rw">🎖️ ${gname(G.g)}</span></div>
   <p style="text-align:center;font-size:13px;color:#8a7a9a">민심이 25 아래로 떨어지면 반란이 일어날 수 있어요! 학교·도서관·장식 건물과 주둔군이 민심을 올려 줘요.</p>`;
-  btn=`<button class="btn green" ${S.res.gold<c||ly>=100?'disabled':''} onclick="relief(${id})">🍚 구휼 💰${c} (민심 +20)</button><button class="btn blue" onclick="closeM();openArmy('garr')">🏯 주둔군 배치</button><button class="btn main" onclick="goCity(${id})">🏘️ 도시 건설</button>`}
+  btn=`<button class="btn green" ${S.res.gold<c||ly>=100?'disabled':''} onclick="relief(${id})">🍚 구휼 💰${c} (민심 +20)</button><button class="btn blue" onclick="closeM();openArmy('garr')">🏯 주둔군 배치</button><button class="btn main" onclick="goCity(${id})">🏘️ 도시 건설</button>${taxBtn(id)}`}
  else{const en=enemyComp(w);
   const who=o==null?`<p style="text-align:center">야생 땅 · 지키는 몬스터: <b>${w.mon}</b></p>`:`<p style="text-align:center">${NAT[o].ic} <b>${NAT[o].n}</b>의 ${w.cap!=null?'<b>수도 🏯</b>':'영토'} · ${S.nations[o].war?'<b style="color:#c0392b">⚔️ 전쟁 중</b>':S.nations[o].ally?'💞 동맹':'평화'}</p>`;
   body=`<p style="text-align:center;font-size:14px">${MAPDEF[w.map].ic} ${MAPDEF[w.map].n}</p>${who}<p style="text-align:center">차지하면: ${prod}</p>${route}<div class="req"><b class="j">수비군 ${fmt(tc(en))}명</b> ${compHtml(en)}</div>${o!=null?`<p style="text-align:center;font-size:14px">장수: ${S.ngens[o].map(g=>GEN[g].n).join(', ')||'없음'}</p>`:''}`;
@@ -2563,7 +2570,7 @@ async function takePhoto(kind){snd('click');const el=$('#photo');el.innerHTML='�
 /* 📢 패치 노트 */
 const VERSION='v7';
 const PATCH=[
- {v:'v7',t:'🌍 세계로 나아가자!',items:['✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지</b>: 너무 빨리 계속 맞히면 경고 후 왕국이 삭제돼요'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
+ {v:'v7',t:'🌍 세계로 나아가자!',items:['💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지</b>: 너무 빨리 계속 맞히면 경고 후 왕국이 삭제돼요'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
  {v:'v6',t:'👩‍🏫 선생님 모드 업데이트',items:['직접 문제 출제 · 시험 모드','문항 분석 · 학생 상세 보기','결과 코드 위조 방지 · QR 입장','칠판 퀴즈쇼']},
  {v:'v5',t:'⚔️ 삼국지급 전쟁',items:['장수 성장·장비 · 책략 카드 · 공성전','주둔 부대 · 민심과 반란 · 계절','기술 트리 · 시나리오 · 업적 · 배경음악']}];
 function showPatch(){openM(`<h2 style="text-align:center">📢 업데이트 내용!</h2>${PATCH.map((p,i)=>`<div class="patch ${i?'old':''}"><h3>${p.v} · ${p.t}</h3>${i===0?`<p class="j" style="margin:4px 0">✨ 새로 추가</p>`:''}<ul>${p.items.map(x=>`<li>${x}</li>`).join('')}</ul>${p.fix?`<p class="j" style="margin:4px 0">🔧 고친 점</p><ul>${p.fix.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}</div>`).join('')}<div class="row"><button class="btn main" onclick="closeM()">확인! 🎮</button></div>`,'patch');snd('lv')}
@@ -2625,7 +2632,7 @@ function openCities(){snd('click');const ts=myTerr();
 function cityPanel(){const id=VIEW,w=WORLD[id],P=curP();const ly=Math.round(S.loy[id]??60);const c=30*S.k;
  openM(`<h2>🏛️ ${w.n} 관청</h2><div class="big">${isleSvg(w)}</div><div class="req"><span class="rw">${MAPDEF[w.map].ic} ${MAPDEF[w.map].n}</span><span class="rw">❤️ 민심 ${ly}</span><span class="rw">${RES[w.r].ic}+${w.p}/분</span><span class="rw">🏗️ ${Object.keys(P).length}/${cityUnl(id)}칸</span><span class="rw">🏯 주둔군 ${fmt(tc((S.garr[id]||{t:{}}).t))}명</span></div>
  <p style="text-align:center;font-size:14px">민심이 10 오를 때마다 지을 수 있는 땅이 1칸 넓어져요. 🌸장식·학교·도서관을 지으면 민심이 잘 올라요!</p>
- <div class="row"><button class="btn green" ${S.res.gold<c||ly>=100?'disabled':''} onclick="relief(${id});cityPanel()">🍚 구휼 💰${c}</button><button class="btn blue" onclick="closeM();openArmy('garr')">🏯 주둔군</button><button class="btn main" onclick="goCity(null)">🏰 수도로</button><button class="btn" onclick="closeM()">닫기</button></div>`,'city')}
+ <div class="row"><button class="btn green" ${S.res.gold<c||ly>=100?'disabled':''} onclick="relief(${id});cityPanel()">🍚 구휼 💰${c}</button>${taxBtn(id,1)}<button class="btn blue" onclick="closeM();openArmy('garr')">🏯 주둔군</button><button class="btn main" onclick="goCity(null)">🏰 수도로</button><button class="btn" onclick="closeM()">닫기</button></div>`,'city')}
 
 /* ===================== v7: AI 국가 지능 (외교·전쟁·연합·기술) ===================== */
 const NTECH=['바퀴','청동기','나침반','인쇄술','증기기관','전기','라디오','컴퓨터','로켓','인공지능','핵융합','양자컴퓨터'];
@@ -2689,6 +2696,45 @@ let GO=false;
 function gameOver(){GO=false;WIPED=true;const sc=score(),t=Math.round((S.play||0)/60),land=myTerr().length+1,nm=S.name;started=false;B=null;Q=null;try{localStorage.removeItem('sk-save')}catch(e){}closeM();snd('no');
  macroOverlay(`<div style="font-size:60px">🏰💥</div><h2>게임 오버</h2><p><b>${esc(nm)}</b>의 수도가 함락됐어요…</p><div class="req" style="justify-content:center"><span class="rw">⭐ ${sc}점</span><span class="rw">🚩 영토 ${land}곳</span><span class="rw">⏱️ ${t}분</span></div><p style="font-size:14px">💡 수도에 병사를 남겨 두고, 성과 성벽을 키우고, 동맹을 맺어 두면 지키기 쉬워요!</p><button class="btn main" onclick="location.reload()">🏗️ 새 왕국 세우기</button>`)}
 
+
+/* 🔀 건물 옮기기 */
+let MOVE=null;const DRAG={i:null,x:0,y:0,on:false,done:false,gh:null};
+function canDrop(i){return i!==CASTLE&&ORDER.slice(0,viewUnl()).includes(i)}
+function markMove(){let bar=$('#moveBar');if(!bar){bar=document.createElement('div');bar.id='moveBar';document.body.appendChild(bar)}
+ if(MOVE==null){bar.style.display='none';document.querySelectorAll('.plot.mv,.plot.drop').forEach(e=>e.classList.remove('mv','drop'));return}
+ const p=curP()[MOVE];if(!p){MOVE=null;return markMove()}bar.innerHTML=`🔀 <b>${BD[p.t].n}</b>을(를) 옮길 곳을 눌러요 <small>(다른 건물을 누르면 자리 바꾸기)</small> <button class="btn sm" onclick="cancelMove()">취소</button>`;bar.style.display='flex';
+ document.querySelectorAll('#grid .plot').forEach(e=>{const i=+e.dataset.i;e.classList.toggle('mv',i===MOVE);e.classList.toggle('drop',i!==MOVE&&canDrop(i))})}
+function startMove(i){closeM();MOVE=i;snd('click');markMove()}
+function cancelMove(){MOVE=null;markMove()}
+function swapPlots(a,b){const P=curP();if(a===b||!P[a])return false;if(!canDrop(b)){toast(b===CASTLE?'🏰 성(관청) 자리에는 옮길 수 없어요':'🌳 아직 개척하지 않은 땅이에요');return false}
+ const A=P[a],Bp=P[b];P[b]=A;if(Bp)P[a]=Bp;else delete P[a];snd('build');renderMap(b);save();toast(Bp?`🔀 ${BD[A.t].n} ↔ ${BD[Bp.t].n} 자리를 바꿨어요`:`🔀 ${BD[A.t].n}을(를) 옮겼어요`);return true}
+function moveTo(i){const from=MOVE;if(i===from){cancelMove();return}MOVE=null;if(!swapPlots(from,i))MOVE=from;markMove()}
+const grid0=$('#grid');
+grid0.addEventListener('pointerdown',e=>{const el=e.target.closest('.plot');if(!el||MOVE!=null)return;const i=+el.dataset.i;if(i===CASTLE||!curP()[i])return;DRAG.i=i;DRAG.x=e.clientX;DRAG.y=e.clientY;DRAG.on=false;DRAG.el=el});
+addEventListener('pointermove',e=>{if(DRAG.i==null)return;if(!DRAG.on){if(Math.hypot(e.clientX-DRAG.x,e.clientY-DRAG.y)<14)return;DRAG.on=true;const r=DRAG.el.getBoundingClientRect();const g=DRAG.el.cloneNode(true);g.id='dragGhost';g.style.width=r.width+'px';g.style.height=r.height+'px';document.body.appendChild(g);DRAG.gh=g;DRAG.el.classList.add('mv');document.querySelectorAll('#grid .plot').forEach(p=>{const j=+p.dataset.i;if(j!==DRAG.i&&canDrop(j))p.classList.add('drop')})}
+ e.preventDefault();const g=DRAG.gh;g.style.left=e.clientX-g.offsetWidth/2+'px';g.style.top=e.clientY-g.offsetHeight/2+'px';
+ document.querySelectorAll('.plot.over').forEach(p=>p.classList.remove('over'));const t=document.elementFromPoint(e.clientX,e.clientY);const tp=t&&t.closest('#grid .plot');if(tp)tp.classList.add('over')},{passive:false});
+addEventListener('pointerup',e=>{if(DRAG.i==null)return;const i=DRAG.i;DRAG.i=null;if(!DRAG.on)return;DRAG.done=true;setTimeout(()=>DRAG.done=false,50);if(DRAG.gh)DRAG.gh.remove();
+ const t=document.elementFromPoint(e.clientX,e.clientY);const tp=t&&t.closest('#grid .plot');document.querySelectorAll('.plot.mv,.plot.drop,.plot.over').forEach(p=>p.classList.remove('mv','drop','over'));
+ if(tp)swapPlots(i,+tp.dataset.i)});
+
+/* ===================== v7: 골드 벌기 ===================== */
+Object.assign(BD,{market:{n:'과학 시장',k:2,cat:'prod',cost:{gold:60,mineral:30,life:20},prod:{gold:8},fx:'🏪 자원을 골드로 팔 수 있어요 · 판매 가격 +10% (레벨당)',d:'왕국의 자원을 사고파는 북적북적 시장이에요.'}});
+ART.market=()=>`${sh}<rect x="14" y="44" width="72" height="42" rx="4" fill="#fff3d6" ${st}/><path d="M8 46 L18 24 L82 24 L92 46 Z" fill="#ff8f8f" ${st}/><path d="M24 24 L20 46 M40 24 L38 46 M60 24 L62 46 M76 24 L80 46" stroke="#fff" stroke-width="5"/><path d="M8 46 L18 24 L82 24 L92 46 Z" fill="none" ${st}/><rect x="22" y="58" width="22" height="16" rx="3" fill="#ffd84d" ${st}/><circle cx="62" cy="64" r="6" fill="#7ee081" ${st}/><circle cx="74" cy="66" r="5" fill="#ff9f43" ${st}/>${face(50,76,.45)}<g class="bob"><circle cx="86" cy="18" r="8" fill="#ffd84d" ${st}/><text x="86" y="22" font-size="10" text-anchor="middle" fill="${O}">$</text></g>`;
+const mkLv=()=>sumLv('market');
+const sellPrice=k=>Math.round((k==='life'?.25:.3)*(1+.1*mkLv())*100)/100;
+function openMarket(){if(examGuard())return;snd('click');const lv=mkLv();
+ const rows=RK.filter(k=>k!=='gold').map(k=>{const pr=sellPrice(k);return `<div class="mkrow"><b>${RES[k].ic} ${RES[k].n}</b><span>보유 ${fmt(S.res[k])}</span><span class="cost">100개 → 💰${Math.floor(100*pr)}</span><div>${[100,1000].map(n=>`<button class="btn sm" ${!lv||S.res[k]<n?'disabled':''} onclick="sellRes('${k}',${n})">${fmt(n)}개 팔기</button>`).join('')}<button class="btn sm green" ${!lv||S.res[k]<10?'disabled':''} onclick="sellRes('${k}',Math.floor(S.res[k]/2))">절반 팔기</button></div></div>`}).join('');
+ openM(`<h2>🏪 과학 시장</h2>${lv?`<p style="font-size:14px">남는 자원을 골드로 바꿔요. 시장 레벨이 높을수록 비싸게 팔려요 (지금 +${lv*10}%).</p>${rows}`:`<p style="text-align:center;font:18px Jua;color:#c0392b;margin:12px 0">🔨 시장을 먼저 지어야 해요! (성 Lv2부터 · 🏗️ 건설 › 🏭 생산)</p>`}
+ <h3 style="margin-top:10px">💡 골드 버는 법</h3><ul style="font-size:14px;margin-left:18px;line-height:1.7"><li>🌟 <b>황금 문제</b>: 연구하기에서 가끔 나와요. 맞히면 골드 ×5!</li><li>💸 <b>세금</b>: 점령한 땅에서 세금을 걷어요 (민심이 조금 떨어져요)</li><li>🎁 <b>출석 보상</b>: 매일 들어오면 골드! 연속 출석할수록 많아져요</li><li>🔥 <b>연속 정답</b>: 5연속부터 보상 ×2</li></ul><div class="row"><button class="btn" onclick="closeM()">닫기</button></div>`,'market')}
+function sellRes(k,n){n=Math.floor(n);if(!mkLv()||n<=0||S.res[k]<n)return;const g=Math.floor(n*sellPrice(k));S.res[k]-=n;S.res.gold+=g;snd('coin');flashRes&&flashRes(['gold']);toast(`🏪 ${RES[k].ic}${fmt(n)} → 💰${fmt(g)}`);renderTop();openMarket();save()}
+const taxAmt=id=>Math.round((20+8*S.k)*(.5+(S.loy[id]??60)/100));
+function taxBtn(id,sm){S.taxCD=S.taxCD||{};const cd=(S.taxCD[id]||0)-S.play;const rev=inRevolt(id);return `<button class="btn ${sm?'':''}" style="background:#fff3bf" ${cd>0||rev?'disabled':''} onclick="collectTax(${id})">💸 세금 ${cd>0?`⏳${Math.ceil(cd/60)}분`:`💰${taxAmt(id)} (민심 -8)`}</button>`}
+function collectTax(id){S.taxCD=S.taxCD||{};if((S.taxCD[id]||0)>S.play||S.terr[id]!=='me'||inRevolt(id))return;const g=taxAmt(id);S.res.gold+=g;S.loy[id]=Math.max(0,(S.loy[id]??60)-8);S.taxCD[id]=S.play+180;snd('coin');toast(`💸 ${WORLD[id].n}에서 세금 💰${g}을 걷었어요`);renderTop();if(mOpen==='city')cityPanel();else islePanel(id);save()}
+function showDaily(force){const today=new Date().toDateString();
+ if(S.daily===today){if(force)openM(`<h2 style="text-align:center">🎁 출석 보상</h2><p style="text-align:center;font:20px Jua;margin:10px 0">오늘은 이미 받았어요! 🔥 ${S.dStreak}일 연속</p><p style="text-align:center">내일 또 오면 더 많이 받아요 (최대 7일)</p><div class="row"><button class="btn main" onclick="closeM()">확인</button></div>`,'daily');return}
+ const y=new Date(Date.now()-864e5).toDateString();S.dStreak=S.daily===y?(S.dStreak||0)+1:1;S.daily=today;const d=Math.min(7,S.dStreak);const g=50*S.k*d;S.res.gold+=g;save();renderTop();snd('lv');confetti();
+ openM(`<h2 style="text-align:center">🎁 출석 보상!</h2><div class="dgrid">${[1,2,3,4,5,6,7].map(i=>`<div class="dday ${i<=d?'on':''}"><small>${i}일</small><b>${i<=d?'✅':'🎁'}</b><small>💰${50*S.k*i}</small></div>`).join('')}</div><p style="text-align:center;font:22px Jua;margin:8px 0">🔥 ${S.dStreak}일 연속 출석 · 💰+${fmt(g)}</p><div class="row"><button class="btn main" onclick="closeM()">받기!</button></div>`,'daily')}
 /* ---------- loop ---------- */
 let lastT=Date.now(),floatT=0,saveT=0,vilT=0;
 setInterval(()=>{const now=Date.now();const dt=Math.min(5,(now-lastT)/1000);lastT=now;if(!started||!S)return;
