@@ -1975,7 +1975,7 @@ function setPlan(k){if(!B||B.done||B.sp<=0)return;B.plan=B.plan===k?null:k;snd('
 /* ===================== v5: 군대 (병력/장수/부대) ===================== */
 let armyTab='troops';
 function openArmy(tab){if(examGuard())return;snd('click');if(tab)armyTab=tab;const mx=maxArmy(),bl=bkLv();const up=Math.round((tc()+garrTotal())*.04*(seasonIdx()===3?1.5:1));
- const tabs=`<div class="chips" style="margin:2px 40px 10px 0">${[['troops','⚔️ 병력'],['gens',`🎖️ 장수 ${S.gens.length}`],['garr',`🏯 부대 ${Object.keys(S.garr).filter(k=>tc(S.garr[k].t)>0).length}`],['fleet',`⛵ 함대 ${S.fleet||0}`]].map(([k,n])=>`<button class="chip ${armyTab===k?'on':''}" onclick="openArmy('${k}')">${n}</button>`).join('')}</div>`;
+ const tabs=`<div class="chips" style="margin:2px 40px 10px 0">${[['troops','⚔️ 병력'],['gens',`🎖️ 장수 ${S.gens.length}`],['garr',`🏯 부대 ${Object.keys(S.garr).filter(k=>tc(S.garr[k].t)>0).length}`],['fleet',`⛵ 함대 ${S.fleet||0}`],['air',`✈️ 공군 ${S.air||0}`]].map(([k,n])=>`<button class="chip ${armyTab===k?'on':''}" onclick="openArmy('${k}')">${n}</button>`).join('')}</div>`;
  let body='';
  if(armyTab==='troops'){
   body=`<div class="req"><span class="rw">⚔️ 본대 ${fmt(tc())} + 주둔 ${fmt(garrTotal())} / ${fmt(mx)}</span><span class="rw">💪 전투력 ${armyPow()}</span><span class="rw">🔥 사기 ${Math.round(S.morale)}</span><span class="rw">🌾 군량 🌱-${up}/분</span><span class="rw">🎖️ 대장 ${GEN[S.lead].n}</span></div>
@@ -1988,6 +1988,7 @@ function openArmy(tab){if(examGuard())return;snd('click');if(tab)armyTab=tab;con
   <h3 style="margin-top:12px">🎓 재야 인재 <small style="font-size:13px">(면접 문제 3개 중 2개 이상 맞히면 등용)</small></h3>${S.free.length?`<div class="glist">${S.free.map(g=>`<div>${genCard(g,false)}<button class="btn sm green" style="width:100%;margin-top:4px" ${S.res.gold<recCost()?'disabled':''} onclick="startIV('${g}')">🎓 면접 보기 💰${recCost()}</button></div>`).join('')}</div>`:'<p>모든 인재를 등용했어요!</p>'}
   <p style="font-size:13px;color:#8a7a9a;margin-top:8px">💡 다른 나라 장수는 전투에서 이기면 포로로 잡아 등용할 수 있어요.</p>`}
  else if(armyTab==='fleet')body=fleetBody();
+ else if(armyTab==='air')body=airBody();
  else{const ts=myTerr();
   body=`<p style="font-size:14px;margin-bottom:6px">영토에 <b>주둔군</b>과 수비 장수를 두면 적의 침공을 막고 민심도 올라가요. 주둔군이 없는 땅은 쉽게 빼앗겨요!</p>
   ${ts.length?`<div class="blist">${ts.map(w=>{const G=S.garr[w.id]||{g:null,t:{}};const ly=Math.round(S.loy[w.id]??60);const near=S.nations.some((N,i)=>!N.fallen&&N.war&&adjTo(w.id,i));return `<div class="bitem" style="cursor:default"><div class="art">${isleSvg(w)}</div><div class="inf"><b>${w.n}</b> ${near?'<span class="cost bad">⚔️ 적국과 국경</span>':''}<br>주둔 ${fmt(tc(G.t))}명 ${compHtml(G.t)}<br>❤️ 민심 ${ly} <span class="minibar"><i style="width:${ly}%;background:${ly<25?'#ff6b6b':ly<50?'#ffd84d':'#8ee07a'}"></i></span><br><select class="eqsel" onchange="garrGen(${w.id},this.value)"><option value="">🎖️ 수비 장수 없음</option>${S.gens.filter(g=>g!==S.lead&&(!busyGen(g)||G.g===g)).map(g=>`<option value="${g}" ${G.g===g?'selected':''}>${GEN[g].n}</option>`).join('')}</select></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn sm" ${tc()>=10?'':'disabled'} onclick="moveG(${w.id},50)">+50</button><button class="btn sm" ${tc()>=10?'':'disabled'} onclick="moveG(${w.id},200)">+200</button><button class="btn sm" ${tc(G.t)?'':'disabled'} onclick="pullG(${w.id})">철수</button></div></div>`}).join('')}</div>`:'<p style="text-align:center;margin:12px">아직 영토가 없어요. 🗺️ 세계에서 땅을 차지해요!</p>'}`}
@@ -2322,7 +2323,7 @@ function newNat(i){return{rel:i<4?Math.round(Math.random()*30-10):Math.round(Mat
 function initWorld(){syncRebels(null);const terr={0:'me'};for(const w of WORLD){if(w.map!=='oce'){terr[w.id]=w.own??null;continue}if(w.cap!=null)terr[w.id]=w.cap}[[5,0],[6,0],[7,1],[8,1],[9,2],[10,2],[11,3],[12,3]].forEach(([i,o])=>terr[i]=o);for(let i=13;i<=18;i++)terr[i]=null;
  const nat=NAT.map((_,i)=>newNat(i));nat[Math.floor(Math.random()*4)].rel=-35;return{terr,nat}}
 function migrateWorld(s){if(s.nations.length<NAT.length){for(let i=s.nations.length;i<NAT.length;i++){s.nations.push(newNat(i));s.ngens[i]=(NGEN[i]||[]).slice()}}
- for(const w of WORLD)if(s.terr[w.id]===undefined)s.terr[w.id]=w.own??null;s.fleet=s.fleet||0;s.auxCD=s.auxCD||{};s.cities=s.cities||{};aiInit(s);return s}
+ for(const w of WORLD)if(s.terr[w.id]===undefined)s.terr[w.id]=w.own??null;s.fleet=s.fleet||0;s.air=s.air||0;s.auxCD=s.auxCD||{};s.cities=s.cities||{};aiInit(s);return s}
 
 /* 지도 생성 */
 const _maps={};
@@ -2393,7 +2394,7 @@ function islePanel(id){snd('click');const w=WORLD[id];const o=S.terr[id];
   else if(tc()<=0)dis='⚔️ 본대 병사가 없어요! 군대에서 징병해요';
   else if(o!=null&&S.nations[o].ally)dis='💞 동맹국은 공격할 수 없어요';
   else if(o!=null&&w.cap!=null&&natTerr(o).length>1)dis='다른 영토를 먼저 차지해야 수도를 공격할 수 있어요';
-  else if(sea&&(S.fleet||0)<shipsNeed())dis=`⛵ 바다 건너 원정이에요! 함선 ${shipsNeed()}척이 필요해요 (지금 ${S.fleet||0}척) — 🏗️항구를 짓고 ⚔️군대 › ⛵함대에서 만들어요`;
+  else if(sea&&(S.fleet||0)<shipsNeed()&&(S.air||0)<airNeed())dis=`⛵ 바다 건너 원정이에요! 함선 ${shipsNeed()}척(또는 공수 작전용 전투기 ${airNeed()}대)이 필요해요 (지금 함선 ${S.fleet||0}척 · 전투기 ${S.air||0}대) — 🏗️항구를 짓고 ⚔️군대 › ⛵함대에서 만들어요`;
   btn=dis?`<p style="text-align:center;color:#c0392b;font-family:Jua">${dis}</p>`:`<button class="btn main" onclick="prepBattle(${id})">${sea?'⛵ 원정 준비':'⚔️ 출진 준비'}</button>`}
  openM(`<h2>${w.n}</h2><div class="big">${isleSvg(w)}</div>${body}<div class="row">${btn}<button class="btn" onclick="closeM()">닫기</button></div>`,'isle')}
 
@@ -2408,37 +2409,39 @@ let DEFAUX=[];
 function togDefAux(i){DEFAUX=DEFAUX.includes(i)?DEFAUX.filter(x=>x!==i):[...DEFAUX,i];snd('click');const el=$('#defaux');if(el)el.innerHTML=auxChips(DEFAUX,'togDefAux')}
 
 /* 출진 준비 */
-function prepBattle(id){const w=WORLD[id],o=S.terr[id];if(!PREP||PREP.id!==id){const ng=o!=null?S.ngens[o]:[];PREP={id,en:enemyComp(w),egen:ng.length?rnd(ng):null,aux:[]}}
+function prepBattle(id){const w=WORLD[id],o=S.terr[id];if(!PREP||PREP.id!==id){const ng=o!=null?S.ngens[o]:[];PREP={id,en:enemyComp(w),egen:ng.length?rnd(ng):null,aux:[],lift:false}}
  if(busyGen(S.lead))S.lead=S.gens.find(g=>!busyGen(g))||S.gens[0];
- const city=o!=null;const siege=w.cap!=null;const sea=seaOnly(id);const ax=auxPreview(PREP.aux);const mineC={...S.troops};for(const k of UK)mineC[k]=(mineC[k]||0)+(ax[k]||0);
+ const city=o!=null;const siege=w.cap!=null;const canLift=seaOnly(id)&&(S.air||0)>=airNeed();if(seaOnly(id)&&(S.fleet||0)<shipsNeed()&&canLift)PREP.lift=true;const sea=seaOnly(id)&&!PREP.lift;const ax=auxPreview(PREP.aux);const mineC={...S.troops};for(const k of UK)mineC[k]=(mineC[k]||0)+(ax[k]||0);
  const mine=compPow(mineC,PREP.en,city,S.lead,true)+allyBonus(),their=compPow(PREP.en,S.troops,false,PREP.egen,false)*(sk(S.lead)==='grav'?.8:1)*(siege?1.5:1)*(sea?1.3:1);const r=mine/Math.max(1,their);
  const hint=r>=1.4?'😎 우리가 우세해요!':r>=.75?'🤔 팽팽해요 — 문제를 잘 맞혀야 이겨요':'😰 열세예요 — 병사를 더 모으거나 상성을 맞춰요';
  openM(`<h2>${sea?'⛵ 원정':'⚔️ 출진'} — ${w.n}${siege?' <span class="cost" style="background:#ffd6d6">🏯 공성전</span>':''}${sea?' <span class="cost" style="background:#d6ecff">⚓ 해전</span>':''}</h2><h3>🎖️ 대장 고르기</h3><div class="glist">${S.gens.filter(g=>!busyGen(g)).map(g=>genCard(g,g===S.lead,`S.lead='${g}';prepBattle(${id})`)).join('')}</div>
  <div class="vs" style="margin-top:10px"><div><b>🏰 우리 본대 ${fmt(tc())}명${tc(ax)?` + 💞원군 ${fmt(tc(ax))}명`:''}</b><div>${compHtml(mineC)}</div><div class="j">전투력 ${Math.round(mine)}</div></div><div><b>${o==null?w.mon:NAT[o].ic+' '+NAT[o].n} ${fmt(tc(PREP.en))}명</b><div>${compHtml(PREP.en)}</div><div class="j">전투력 ${Math.round(their)}${PREP.egen?` · 장수 ${GEN[PREP.egen].n}`:''}</div></div></div>
- ${auxChips(PREP.aux,'togAux')}
+ ${auxChips(PREP.aux,'togAux')}${canLift?`<div class="auxbox" style="background:#e8f4ff"><b class="j">✈️ 공수 작전</b><button class="chip sm ${PREP.lift?'on':''}" ${(S.fleet||0)<shipsNeed()?'disabled':''} onclick="PREP.lift=!PREP.lift;prepBattle(${id})">${PREP.lift?'✅ 비행기로 건너기':'⛵ 배로 건너기 (해전)'}</button><small>전투기 ${airNeed()}대 이상이면 해전 없이 바로 상륙할 수 있어요</small></div>`:''}${S.air?`<p style="text-align:center;font-size:13px">✈️ 공군 ${S.air}대가 공습으로 지원해요 (정답 공격 +${Math.round(Math.min(.5,S.air*.03)*100)}%)${o!=null&&((S.ntech||[])[o]||0)>=7?' · <b style="color:#c0392b">⚠️ 적에게 대공포가 있어 효과 절반</b>':''}</p>`:''}
  ${sea?`<p style="text-align:center;font-size:14px;background:#e6f4ff;border-radius:10px;padding:4px">⚓ 바다 건너 원정! 먼저 <b>적 함대</b>를 무찔러야 상륙할 수 있어요. 우리 함선 ${S.fleet}척 (필요 ${shipsNeed()}척). 함대가 전멸하면 후퇴해요.</p>`:''}
  ${siege?`<p style="text-align:center;font-size:14px;background:#fff0f0;border-radius:10px;padding:4px">🏯 수도는 성벽이 있어요! 성벽을 먼저 부숴야 병사를 공격할 수 있어요. <b>🪨투석기</b>가 많을수록 성벽이 빨리 무너져요.</p>`:''}
  <p style="text-align:center;font:18px Jua;margin:6px 0">${hint}</p><p style="text-align:center;font-size:13px;color:#8a7a9a">🛡️방패 > 🐎기병·🤖로봇 > 🏹궁병·🛸드론 > 🛡️방패 · 사기 ${Math.round(S.morale)}</p>
  <div class="row"><button class="btn main" onclick="attack(${id})">${sea?'⛵':'⚔️'} 출진! (문제 ${(sk(S.lead)==='rel'?5:4)+(siege?1:0)+(sea?1:0)}개)</button><button class="btn" onclick="PREP=null;closeM()">취소</button></div>`,'prep')}
-function attack(id){const o=S.terr[id];if(o!=null&&o!=='me'&&!S.nations[o].war)declareWar(o,true);const P=PREP&&PREP.id===id?PREP:{en:enemyComp(WORLD[id]),egen:null,aux:[]};PREP=null;const aux=auxComp(P.aux||[]);startBattle('atk',id,o,P.en,P.egen,'main',aux)}
+function attack(id){const o=S.terr[id];if(o!=null&&o!=='me'&&!S.nations[o].war)declareWar(o,true);const P=PREP&&PREP.id===id?PREP:{en:enemyComp(WORLD[id]),egen:null,aux:[]};PREP=null;AIRLIFT=!!P.lift&&seaOnly(id);const aux=auxComp(P.aux||[]);startBattle('atk',id,o,P.en,P.egen,'main',aux)}
 
 /* 전투 */
 function startBattle(mode,tid,ni,en,egen,src,aux){src=src||'main';const gar=src!=='main'?S.garr[tid]:null;const g=gar?gar.g:S.lead,s=sk(g);
  const my={...(gar?gar.t:S.troops)};for(const k of UK)my[k]=my[k]||0;const mil=mode==='def'?(src==='main'?wallDef():S.k*10):0;const myC={...my,inf:my.inf+mil};if(aux)for(const k of UK)myC[k]=(myC[k]||0)+(aux[k]||0);
- const city=mode==='atk'?S.terr[tid]!=null:false;const siege=mode==='atk'&&WORLD[tid].cap!=null;const naval=mode==='atk'&&seaOnly(tid);
- let P0=compPow(myC,en,city,g,true)+(src==='main'?allyBonus():0);if(mode==='def')P0*=(1+S.k*.05)*(s==='rain'?1.35:1)*(hasT('radio')?1.15:1);
+ const city=mode==='atk'?S.terr[tid]!=null:false;const siege=mode==='atk'&&WORLD[tid].cap!=null;const naval=mode==='atk'&&seaOnly(tid)&&!AIRLIFT;const lift=AIRLIFT;AIRLIFT=false;const air=src==='main'?(S.air||0):0;const aa=ni!=null&&((S.ntech||[])[ni]||0)>=7;
+ let P0=compPow(myC,en,city,g,true)+(src==='main'?allyBonus():0);if(mode==='def')P0*=(1+S.k*.05)*(s==='rain'?1.35:1)*(hasT('radio')?1.15:1)*(1+Math.min(.4,air*.03)*(aa?.5:1));
  let E0=compPow(en,myC,mode==='def'&&tid===0,egen,false)*(s==='grav'?.8:1);
  const FP0=Math.max(1,(S.fleet||0)*15*(hasT('sail')?1.3:1)*gMult(g)),N0=Math.max(1,islandDef(WORLD[tid])*(S.terr[tid]==null?.25:.35));
- B={mode,tid,ni,egen,g,src,my0:my,myC,en0:{...en},P0:Math.max(1,P0),E0:Math.max(1,E0),fm:1,fe:1,r:0,maxR:(s==='rel'?5:4)+(siege?1:0)+(naval?1:0),streak:0,free:s==='scope',done:false,log:[],sp:2+(hasT('comp')?1:0),plan:null,wallR:0,siege,wl:siege?1:0,W0:Math.max(1,E0*.7),naval,fl:1,nl:naval?1:0,FP0,N0,auxN:aux?tc(aux):0};
+ B={mode,tid,ni,egen,g,src,my0:my,myC,en0:{...en},P0:Math.max(1,P0),E0:Math.max(1,E0),fm:1,fe:1,r:0,maxR:(s==='rel'?5:4)+(siege?1:0)+(naval?1:0),streak:0,free:s==='scope',done:false,log:[],sp:2+(hasT('comp')?1:0),plan:null,wallR:0,siege,wl:siege?1:0,W0:Math.max(1,E0*.7),naval,fl:1,nl:naval?1:0,FP0,N0,auxN:aux?tc(aux):0,air,aa,lift};
  if(aux)B.log.push(`💞 동맹 원군 ${fmt(tc(aux))}명이 합류했어요!`);
  if(s==='flash'){B.fe=.88;B.log.push(`💡 ${GEN[g].n}의 전구 섬광! 적 ${Math.round(tc(en)*.12)}명 기습!`)}
+ if(lift)B.log.push(`✈️ 공수 작전! 비행기로 바다를 건너 바로 상륙했어요`);
+ if(air){const hit=Math.min(.25,air*.02)*(aa?.5:1);B.fe=Math.max(.02,B.fe-hit);B.log.push(`✈️ 공군 ${air}대 ${mode==='atk'?'선제 공습':'요격 출격'}! 적 ${fmt(Math.round(tc(en)*hit))}명 피해${aa?' (적 대공포 때문에 절반)':''}`)}
  bgmMode();nextBQ()}
 function bEnd(){return B.r>=B.maxR||B.fe<=.001||B.fm<=.001||(B.naval&&B.fl<=.001)}
 function drawB(){const w=WORLD[B.tid];const q=B.q,F=FIELDS[q.f];const st=gStat(B.g);
  const title=B.mode==='atk'?`${B.naval&&B.nl>0?'⚓':B.siege?'🏯':'⚔️'} ${w.n} ${B.naval&&B.nl>0?'해전':B.siege?'공성전':'전투'}`:`🛡️ ${w.id===0?'우리 왕국':w.n} 방어전`;
  const myN=Math.round(tc(B.myC)*B.fm),enN=Math.round(tc(B.en0)*B.fe);
  const strat=B.sp>0?`<div class="strat"><b class="j">🧠 책략 ${B.sp}회</b>${Object.entries(STRAT).map(([k,v])=>st.i>=v.i?`<button class="chip sm ${B.plan===k?'on':''}" data-k="${k}" onclick="setPlan('${k}')" title="${v.d}">${v.ic}${v.n}</button>`:'').join('')}<small>고른 뒤 정답을 맞히면 발동!</small></div>`:'';
- openM(`<h2>${title} <small style="font-size:15px">라운드 ${Math.min(B.r+1,B.maxR)}/${B.maxR}</small></h2>
+ openM(`<h2>${title} <small style="font-size:15px">라운드 ${Math.min(B.r+1,B.maxR)}/${B.maxR}</small>${B.air?` <span class="cost" style="background:#dbeeff">✈️ ${B.air}대 · 공격 +${Math.round(Math.min(.5,B.air*.03)*(B.aa?.5:1)*100)}%</span>`:''}</h2>
  <div class="bhead"><div class="bg">${B.g?genSvg(B.g):'<span style="font-size:30px">🛡️</span>'}<div><b>${gname(B.g)}</b><small>${B.g?'✨'+GEN[B.g].skn:'장수 없음'}</small></div></div><div class="bg en"><div style="text-align:right"><b>${B.egen?GEN[B.egen].n:bName()}</b><small>${B.egen?'✨'+GEN[B.egen].skn:'몬스터'}</small></div>${B.egen?genSvg(B.egen):`<span style="font-size:30px">${bName().split(' ')[0]}</span>`}</div></div>
  <div class="hp"><div><i id="hpm" style="width:${B.fm*100}%"></i></div><span id="nm">${fmt(myN)}명</span><span class="vsx">VS</span><span id="ne">${fmt(enN)}명</span><div><i id="hpe" style="width:${B.fe*100}%;background:#ff7b7b;margin-left:auto"></i></div></div>
  ${B.naval?`<div class="wallbar"><span>🚢 우리 함대</span><div><i id="hpf" style="width:${B.fl*100}%;background:#4dabf7"></i></div><span id="flp">${Math.round(B.fl*100)}%</span></div><div class="wallbar"><span>⚓ 적 함대</span><div><i id="hpn" style="width:${B.nl*100}%;background:#ff8f8f"></i></div><span id="nlp">${Math.round(B.nl*100)}%</span></div>`:''}
@@ -2453,6 +2456,7 @@ function bAnswer(i,ev){if(!B||B.done||i>=B.q.opts.length)return;const q=B.q;let 
  if(ok){S.total++;S.streak++;S.best=Math.max(S.best,S.streak);S.stats[q.f].c++;gainCorrect(q);B.streak++;B.cor=(B.cor||0)+1;snd('ok');snd('clash')}
  else{S.streak=0;S.stats[q.f].w++;S.wrong.unshift(wrongRec(q,i));S.wrong=S.wrong.slice(0,40);B.streak=0;snd('no');if(B.free){B.free=false;forgiven=true}}
  let md=ok?(s==='rad'?1.9:1.5)*(s==='oxy'?1+.15*(B.streak-1):1):forgiven?1:.6;
+ if(ok&&B.air)md*=1+Math.min(.5,B.air*.03)*(B.aa?.5:1);
  let ed=ok?.5:forgiven?1:1.15;if(s==='field')ed*=.8;if(s==='evo')ed*=.65;if(s==='herb')ed*=.8;if(B.mode==='def'&&s==='rain')ed*=.8;
  if(B.siege&&B.wl>0)ed*=1.15;
  let pl='';const plan=B.plan;
@@ -2482,8 +2486,8 @@ function bNext(){if(!B||!B.done)return;if(bEnd())resolveBattle();else nextBQ()}
 function resolveBattle(){if(!B)return;const s=sk(B.g);const win=(!B.naval||B.nl<=0)&&(!B.naval||B.fl>.001)&&(!B.siege||B.wl<=0)&&(B.fe<=.001||(B.fm>.001&&B.P0*B.fm>B.E0*B.fe));const w=WORLD[B.tid];
  let keep=B.fm;if(s==='heal')keep+=(1-keep)*.3;if(hasT('med'))keep+=(1-keep)*.15;
  const tgtT=B.src==='main'?S.troops:(S.garr[B.tid]?S.garr[B.tid].t:{});const before=tc(tgtT);UK.forEach(k=>tgtT[k]=Math.max(0,Math.floor((B.my0[k]||0)*keep)));const lost=before-tc(tgtT);
- let shipLost=0;if(B.naval){const f0=S.fleet||0;S.fleet=Math.max(0,Math.round(f0*Math.max(0,B.fl)));shipLost=f0-S.fleet}
- let h='',cap='',extraR=shipLost?`<span class="rw" style="background:#d6ecff">🚢 함선 -${shipLost}척</span>`:'';
+ let shipLost=0;if(B.naval){const f0=S.fleet||0;S.fleet=Math.max(0,Math.round(f0*Math.max(0,B.fl)));shipLost=f0-S.fleet}let airLost=0;if(B.air){airLost=Math.min(S.air||0,Math.round(B.air*((1-Math.min(1,keep))*.5+(B.aa?.1:0))));S.air=(S.air||0)-airLost}
+ let h='',cap='',extraR=(shipLost?`<span class="rw" style="background:#d6ecff">🚢 함선 -${shipLost}척</span>`:'')+(airLost?`<span class="rw" style="background:#dbeeff">✈️ 전투기 -${airLost}대</span>`:'');
  const tryCap=(ch)=>{if(B.egen&&B.ni!=null&&Math.random()<ch){const g=B.egen;S.ngens[B.ni]=S.ngens[B.ni].filter(x=>x!==g);S.gens.push(g);cap=`<div class="gcap">${genCard(g,true)}<p class="j" style="text-align:center">🎉 포로로 잡은 <b>${jo(GEN[g].n,'이','가')}</b> 우리 장수가 됐어요!</p></div>`;news(`🎖️ ${NAT[B.ni].n}의 장수 ${jo(GEN[g].n,'을','를')} 등용했어요`)}};
  const dropItem=(ch)=>{if(Math.random()<ch){const k=rnd(Object.keys(ITEMS));S.items.push(k);extraR+=`<span class="rw" style="background:#e6f7ff">🎁 장비 ${ITEMS[k].ic}${ITEMS[k].n}</span>`}};
  const xp=gainXP(B.g,(win?40:15)+10*(B.cor||0));if(xp)extraR+=xp;
@@ -2573,10 +2577,10 @@ async function takePhoto(kind){snd('click');const el=$('#photo');el.innerHTML='�
  const png=await svgToPng(svgS,w,h);snd('coin');el.innerHTML=`<img src="${png}" style="width:100%;border:3px solid ${O};border-radius:14px"><div class="row"><a class="btn main" href="${png}" download="과학킹덤_${esc(S.name)}_${name}.png" style="text-decoration:none">💾 사진 저장</a></div>`}catch(e){el.innerHTML='⚠️ 사진을 만들지 못했어요. 다른 브라우저(크롬)에서 다시 해 보세요.'}}
 
 /* 📢 패치 노트 */
-const VERSION='v7';const BUILD='1794828688';
+const VERSION='v7';const BUILD='1794829872';
 (async()=>{try{if(location.protocol!=='https:')return;const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='(\d+)'/);if(m&&m[1]!==BUILD){if(!started){const k='sk-reload-'+m[1];if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,1);location.replace(location.pathname+'?v='+m[1]);return}}const d=document.createElement('div');d.id='newVer';d.innerHTML='🆕 새 버전이 나왔어요! <button class="btn sm main" onclick="save();location.replace(location.pathname+\'?v='+m[1]+'\')">업데이트</button>';document.body.appendChild(d)}}catch(e){}})();
 const PATCH=[
- {v:'v7',t:'🌍 세계로 나아가자!',items:['🎟️ <b>쿠폰 코드</b>: 📚더보기 › 🎟️쿠폰에서 코드를 입력하면 보상! 선생님은 선생님 모드에서 보상 쿠폰을 만들 수 있어요','💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지 강화</b>: 자동 클릭·같은 자리 연타·기계 같은 박자·숨은 버튼·다른 창 클릭 등을 감지해요. 의심되면 <b>사람 확인</b> 문제가 나오고, 틀리면 경고 → 두 번째엔 왕국 삭제!'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
+ {v:'v7',t:'🌍 세계로 나아가자!',items:['✈️ <b>공군</b>: 성 Lv5부터 공군 기지를 짓고 전투기를 만들어요! 공습·공격 지원·수도 방어, 그리고 해전 없이 바다를 건너는 🪂공수 작전','🎟️ <b>쿠폰 코드</b>: 📚더보기 › 🎟️쿠폰에서 코드를 입력하면 보상! 선생님은 선생님 모드에서 보상 쿠폰을 만들 수 있어요','💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지 강화</b>: 자동 클릭·같은 자리 연타·기계 같은 박자·숨은 버튼·다른 창 클릭 등을 감지해요. 의심되면 <b>사람 확인</b> 문제가 나오고, 틀리면 경고 → 두 번째엔 왕국 삭제!'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
  {v:'v6',t:'👩‍🏫 선생님 모드 업데이트',items:['직접 문제 출제 · 시험 모드','문항 분석 · 학생 상세 보기','결과 코드 위조 방지 · QR 입장','칠판 퀴즈쇼']},
  {v:'v5',t:'⚔️ 삼국지급 전쟁',items:['장수 성장·장비 · 책략 카드 · 공성전','주둔 부대 · 민심과 반란 · 계절','기술 트리 · 시나리오 · 업적 · 배경음악']}];
 function showPatch(){openM(`<h2 style="text-align:center">📢 업데이트 내용!</h2>${PATCH.map((p,i)=>`<div class="patch ${i?'old':''}"><h3>${p.v} · ${p.t}</h3>${i===0?`<p class="j" style="margin:4px 0">✨ 새로 추가</p>`:''}<ul>${p.items.map(x=>`<li>${x}</li>`).join('')}</ul>${p.fix?`<p class="j" style="margin:4px 0">🔧 고친 점</p><ul>${p.fix.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}</div>`).join('')}<div class="row"><button class="btn main" onclick="closeM()">확인! 🎮</button></div>`,'patch');snd('lv')}
@@ -2792,6 +2796,20 @@ function cpForm(){return `<p style="font-size:14px">학생들에게 줄 <b>보�
 function makeCoupon(){const v=id=>Math.max(0,Math.floor(+$(id).value||0));const g=v('#cpg'),a=v('#cpa'),rp=v('#cpr'),inf=v('#cpi'),ex=v('#cpe');const r={};if(g)r.gold=g;if(a)['energy','element','life','mineral'].forEach(k=>r[k]=a);
  if(!g&&!a&&!rp&&!inf)return toast('보상을 하나 이상 넣어 주세요');const o={cp:1,id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),n:($('#cpn').value||'선생님 쿠폰').slice(0,20),r};if(rp)o.rp=rp;if(inf)o.inf=inf;if(ex)o.exp=Date.now()+ex*864e5;
  const code=b64e(o);snd('coin');$('#cpout').innerHTML=`<textarea readonly style="width:100%;height:70px;font-size:12px;border:3px solid ${O};border-radius:12px;padding:6px">${code}</textarea><div class="row"><button class="btn sm" onclick="copyText(this.parentNode.previousElementSibling.value,this)">📋 복사</button></div><p style="font-size:13px;color:#8a7a9a">학생은 📚더보기 › 🎟️쿠폰에 붙여 넣으면 돼요.</p>`}
+
+/* ===================== v7: ✈️ 공군 ===================== */
+let AIRLIFT=false;
+Object.assign(BD,{airbase:{n:'공군 기지',k:5,cat:'mil',cost:ALLR(320,130),prod:{},fx:'✈️ 전투기 생산 · 최대 전투기 +5 (레벨당)',d:'활주로와 격납고가 있는 하늘의 요새예요.'}});
+const PLANE={gold:80,energy:40,mineral:30,element:20};
+const maxAir=()=>5*sumLv('airbase');
+const airNeed=()=>Math.max(3,Math.ceil(tc()/100));
+ART.airbase=()=>`${sh}<rect x="6" y="66" width="88" height="20" rx="4" fill="#8a94a6" ${st}/><path d="M12 76 h10 M30 76 h10 M48 76 h10 M66 76 h10" stroke="#fff" stroke-width="3"/><path d="M14 64 Q14 36 40 36 Q66 36 66 64 Z" fill="#c6d4e8" ${st}/><rect x="28" y="50" width="24" height="14" rx="2" fill="#5b6b82" ${st}/><rect x="72" y="30" width="6" height="34" fill="#dfe6f2" ${st}/><circle cx="75" cy="26" r="6" fill="#ff8f8f" ${st}/><path class="flag" d="M78 14 L92 18 L78 22Z" fill="#7ec8ff" stroke="${O}" stroke-width="2"/>${face(40,46,.45)}<g class="bob"><path d="M58 20 L84 16 L86 20 L60 26Z" fill="#fff" ${st}/></g>`;
+ART.plane=()=>`<ellipse cx="50" cy="92" rx="34" ry="5" fill="#2a4a1a" opacity=".15"/><g class="bob"><path d="M14 52 Q50 40 86 50 Q90 54 86 58 Q50 64 14 58 Z" fill="#7ec8ff" ${st}/><path d="M44 52 L30 20 L40 20 L60 52 Z" fill="#4dabf7" ${st}/><path d="M44 58 L30 86 L40 86 L60 58 Z" fill="#4dabf7" ${st}/><path d="M16 54 L8 40 L16 40 L24 52 Z" fill="#ffd84d" ${st}/><circle cx="74" cy="53" r="5" fill="#fff" ${st}/>${face(56,55,.45)}</g>`;
+function airBody(){const mx=maxAir(),bl=sumLv('airbase');return `<div style="text-align:center"><div style="width:120px;height:110px;margin:0 auto">${svg(ART.plane())}</div><p class="j" style="font-size:22px">✈️ 전투기 ${S.air||0} / ${mx}대</p>
+ <div class="req" style="font-size:13px"><span class="rw">💥 공습: 전투 시작 때 적에게 최대 25% 피해</span><span class="rw">⚔️ 정답 공격 최대 +50%</span><span class="rw">🛡️ 수도 방어 최대 +40%</span><span class="rw">🪂 전투기 ${airNeed()}대면 공수 작전 (해전 없이 바다 건너기)</span></div>
+ ${bl?`<p>1대당 ${costHtml(PLANE)}</p><div class="row">${[1,3,5].map(n=>`<button class="btn ${n===3?'main':''}" ${(S.air||0)+n<=mx&&canPay(scale(PLANE,n))?'':'disabled'} onclick="buildPlane(${n})">+${n}대</button>`).join('')}</div>${(S.air||0)>=mx?'<p style="color:#c0392b;font-size:14px">공군 기지를 업그레이드하거나 더 지으면 더 많이 만들 수 있어요</p>':''}`:`<p style="font:18px Jua;color:#c0392b;margin:10px 0">🔨 공군 기지를 먼저 지어야 해요! (성 Lv5부터 · 🏗️ 건설 › ⚔️ 군사)</p>`}
+ <p style="font-size:13px;color:#8a7a9a">⚠️ 기술 Lv7(컴퓨터) 이상인 나라는 대공포가 있어서 공군 효과가 절반이에요. 전투에서 지면 전투기도 잃어요. 전투기는 수도 본대와 함께 싸워요.</p></div>`}
+function buildPlane(n){const c=scale(PLANE,n);if(!sumLv('airbase')||(S.air||0)+n>maxAir()||!canPay(c))return;pay(c);S.air=(S.air||0)+n;snd('build');toast(`✈️ 전투기 ${n}대 출격 준비 완료!`);renderTop();openArmy('air');save()}
 /* ---------- loop ---------- */
 let lastT=Date.now(),floatT=0,saveT=0,vilT=0;
 setInterval(()=>{const now=Date.now();const dt=Math.min(5,(now-lastT)/1000);lastT=now;if(!started||!S)return;
