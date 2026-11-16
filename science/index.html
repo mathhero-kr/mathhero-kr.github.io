@@ -233,6 +233,8 @@ button{font-family:inherit;color:var(--o)}
 .cpform{display:grid;grid-template-columns:1fr 1fr;gap:6px}.cpform label{font-size:13px;display:flex;flex-direction:column;gap:2px}.cpform input{font:15px Jua;border:2.5px solid var(--o);border-radius:10px;padding:4px 8px;color:var(--o)}
 #newVer{position:fixed;right:10px;bottom:96px;z-index:60;background:#fff3bf;border:3px solid var(--o);border-radius:99px;padding:5px 6px 5px 14px;font-family:Jua;box-shadow:0 4px 0 var(--o);display:flex;gap:8px;align-items:center}
 .verlab{position:absolute;right:12px;bottom:8px;font-size:11px;color:#a99bb8}
+.opt.hp{position:absolute!important;left:-9999px!important;top:0;width:1px;height:1px;opacity:0;pointer-events:auto}
+.hcbox{position:relative;height:200px;background:#f4f1f8;border:3px dashed var(--o);border-radius:16px;margin:6px 0}.hcb{position:absolute;width:56px;height:56px;font-size:28px;border:3px solid var(--o);border-radius:14px;background:#fff;cursor:pointer;box-shadow:0 3px 0 var(--o);font-family:Jua;color:var(--o)}.hcb:active{transform:translateY(2px)}
 </style></head><body>
 <div id="land"></div>
 <div id="stage"><div id="island"><div id="grid"></div></div></div>
@@ -1562,11 +1564,11 @@ let Q=null,recent=[];
 function openQuiz(){newQ()}
 let pendingFix=false;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mOpen)return closeM();
- if(mOpen==='battle'&&B){if(!B.done&&['1','2','3','4'].includes(e.key))bAnswer(+e.key-1);else if(B.done&&(e.key==='Enter'||e.key===' ')){e.preventDefault();bNext()}return}
- if(mOpen==='iv'&&IV){if(!IV.done&&['1','2','3','4'].includes(e.key))ivAns(+e.key-1);else if(IV.done&&(e.key==='Enter'||e.key===' ')){e.preventDefault();ivNext()}return}
- if(mOpen==='exam'&&S.exam&&['1','2','3','4'].includes(e.key)){exAns(+e.key-1);return}
+ if(mOpen==='battle'&&B){if(!B.done&&['1','2','3','4'].includes(e.key))bAnswer(+e.key-1,e);else if(B.done&&(e.key==='Enter'||e.key===' ')){e.preventDefault();bNext()}return}
+ if(mOpen==='iv'&&IV){if(!IV.done&&['1','2','3','4'].includes(e.key))ivAns(+e.key-1,e);else if(IV.done&&(e.key==='Enter'||e.key===' ')){e.preventDefault();ivNext()}return}
+ if(mOpen==='exam'&&S.exam&&['1','2','3','4'].includes(e.key)){exAns(+e.key-1,e);return}
  if(mOpen!=='quiz'||!Q)return;
- if(!Q.done&&['1','2','3','4'].includes(e.key))answer(+e.key-1);else if(Q.done&&(e.key==='Enter'||e.key===' ')){e.preventDefault();newQ()}});
+ if(!Q.done&&['1','2','3','4'].includes(e.key))answer(+e.key-1,e);else if(Q.done&&(e.key==='Enter'||e.key===' ')){e.preventDefault();newQ()}});
 
 /* ---------- crisis ---------- */
 function renderCrisis(){const c=$('#crisis');if(!S.crisis){c.style.display='none';return}const C=CRISIS[S.crisis.f],F=FIELDS[S.crisis.f];c.style.display='block';c.innerHTML=`${C.ic} ${C.m} ${F.n} 건물이 멈췄어요<br><span style="font-size:13px">${F.ic} ${F.n} 문제 ${2-S.crisis.n}개를 맞히면 복구 + 보물상자!</span>`}
@@ -2571,22 +2573,49 @@ async function takePhoto(kind){snd('click');const el=$('#photo');el.innerHTML='�
  const png=await svgToPng(svgS,w,h);snd('coin');el.innerHTML=`<img src="${png}" style="width:100%;border:3px solid ${O};border-radius:14px"><div class="row"><a class="btn main" href="${png}" download="과학킹덤_${esc(S.name)}_${name}.png" style="text-decoration:none">💾 사진 저장</a></div>`}catch(e){el.innerHTML='⚠️ 사진을 만들지 못했어요. 다른 브라우저(크롬)에서 다시 해 보세요.'}}
 
 /* 📢 패치 노트 */
-const VERSION='v7';const BUILD='1794827813';
+const VERSION='v7';const BUILD='1794828688';
 (async()=>{try{if(location.protocol!=='https:')return;const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='(\d+)'/);if(m&&m[1]!==BUILD){if(!started){const k='sk-reload-'+m[1];if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,1);location.replace(location.pathname+'?v='+m[1]);return}}const d=document.createElement('div');d.id='newVer';d.innerHTML='🆕 새 버전이 나왔어요! <button class="btn sm main" onclick="save();location.replace(location.pathname+\'?v='+m[1]+'\')">업데이트</button>';document.body.appendChild(d)}}catch(e){}})();
 const PATCH=[
- {v:'v7',t:'🌍 세계로 나아가자!',items:['🎟️ <b>쿠폰 코드</b>: 📚더보기 › 🎟️쿠폰에서 코드를 입력하면 보상! 선생님은 선생님 모드에서 보상 쿠폰을 만들 수 있어요','💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지</b>: 너무 빨리 계속 맞히면 경고 후 왕국이 삭제돼요'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
+ {v:'v7',t:'🌍 세계로 나아가자!',items:['🎟️ <b>쿠폰 코드</b>: 📚더보기 › 🎟️쿠폰에서 코드를 입력하면 보상! 선생님은 선생님 모드에서 보상 쿠폰을 만들 수 있어요','💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지 강화</b>: 자동 클릭·같은 자리 연타·기계 같은 박자·숨은 버튼·다른 창 클릭 등을 감지해요. 의심되면 <b>사람 확인</b> 문제가 나오고, 틀리면 경고 → 두 번째엔 왕국 삭제!'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
  {v:'v6',t:'👩‍🏫 선생님 모드 업데이트',items:['직접 문제 출제 · 시험 모드','문항 분석 · 학생 상세 보기','결과 코드 위조 방지 · QR 입장','칠판 퀴즈쇼']},
  {v:'v5',t:'⚔️ 삼국지급 전쟁',items:['장수 성장·장비 · 책략 카드 · 공성전','주둔 부대 · 민심과 반란 · 계절','기술 트리 · 시나리오 · 업적 · 배경음악']}];
 function showPatch(){openM(`<h2 style="text-align:center">📢 업데이트 내용!</h2>${PATCH.map((p,i)=>`<div class="patch ${i?'old':''}"><h3>${p.v} · ${p.t}</h3>${i===0?`<p class="j" style="margin:4px 0">✨ 새로 추가</p>`:''}<ul>${p.items.map(x=>`<li>${x}</li>`).join('')}</ul>${p.fix?`<p class="j" style="margin:4px 0">🔧 고친 점</p><ul>${p.fix.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}</div>`).join('')}<div class="row"><button class="btn main" onclick="closeM()">확인! 🎮</button></div>`,'patch');snd('lv')}
 function whenFree(fn,tries=60){if(!mOpen&&started)return fn();if(tries>0)setTimeout(()=>whenFree(fn,tries-1),500)}
 
-/* 🤖 매크로 감지 */
-const MAC={w:[],t0:0};let WIPED=false;
-function markShown(){MAC.t0=performance.now()}
-function macroCheck(ok,ev){if(!S||WIPED)return WIPED;const dt=performance.now()-MAC.t0;const sus=(ev&&ev.isTrusted===false)||(ok&&dt<700);MAC.w.push(sus?1:0);if(MAC.w.length>10)MAC.w.shift();
- if(MAC.w.reduce((a,b)=>a+b,0)>=5){MAC.w=[];if(!S.macroWarn){S.macroWarn=1;save();setTimeout(macroWarnShow,500)}else{macroWipe();return true}}return false}
+/* 🤖 매크로 감지 (여러 겹) */
+const MAC={w:[],t0:0,clicks:[],gaps:[],last:0,down:0,keys:0,moves:0,hc:null};let WIPED=false;
+addEventListener('pointerdown',e=>{MAC.down=performance.now()},true);
+addEventListener('pointermove',()=>{MAC.moves++},{passive:true,capture:true});
+function markShown(){MAC.t0=performance.now();MAC.moves0=MAC.moves;const o=$('#opts');if(o&&!o.querySelector('.hp')){const h=document.createElement('button');h.className='opt hp';h.tabIndex=-1;h.setAttribute('aria-hidden','true');h.textContent='정답';h.onclick=ev=>{ev.stopPropagation();macroHard('숨은 버튼 클릭')};o.appendChild(h)}}
+function macroSignals(ok,ev){const now=performance.now(),dt=now-MAC.t0;const r=[];
+ if(ev&&ev.isTrusted===false)r.push('자동 클릭');
+ if(ok&&dt<700)r.push('너무 빠름');
+ if(document.hidden||(document.hasFocus&&!document.hasFocus()))r.push('다른 창');
+ const mouse=ev&&ev.type==='click'&&ev.clientX>0;
+ if(mouse){MAC.clicks.push([ev.clientX,ev.clientY]);if(MAC.clicks.length>5)MAC.clicks.shift();const c=MAC.clicks;if(c.length>=5&&c.every(p=>Math.abs(p[0]-c[0][0])<2&&Math.abs(p[1]-c[0][1])<2))r.push('같은 자리 연타');
+  const hold=now-MAC.down;if(MAC.down&&hold<12&&ev.pointerType!=='touch')r.push('누르는 시간 0초');
+  if(MAC.moves===MAC.moves0&&ev.pointerType==='mouse')r.push('마우스 안 움직임')}
+ if(MAC.last){MAC.gaps.push(now-MAC.last);if(MAC.gaps.length>8)MAC.gaps.shift();const g=MAC.gaps;if(g.length>=8){const m=g.reduce((a,b)=>a+b,0)/g.length;const sd=Math.sqrt(g.reduce((a,b)=>a+(b-m)*(b-m),0)/g.length);if(sd<60&&m<6000)r.push('기계처럼 일정한 박자')}}
+ MAC.last=now;return r}
+function macroCheck(ok,ev){if(!S||WIPED)return WIPED;if(MAC.hc)return true;const sig=macroSignals(ok,ev);
+ const hard=sig.includes('자동 클릭')||sig.includes('기계처럼 일정한 박자')||sig.includes('같은 자리 연타');
+ MAC.w.push(sig.length?(hard?2:1):0);if(MAC.w.length>10)MAC.w.shift();MAC.why=sig.length?sig:MAC.why;
+ if(MAC.w.reduce((a,b)=>a+b,0)>=5){MAC.w=[];MAC.gaps=[];MAC.clicks=[];humanCheck();return true}return false}
+function macroHard(why){if(!S||WIPED)return;MAC.why=[why];MAC.w=[];macroStrike()}
+function macroStrike(){if(!S.macroWarn){S.macroWarn=1;save();macroWarnShow()}else macroWipe()}
+const HC_SET=['🍎','🍌','🍇','🐶','🐱','🐸','⭐','🌙','🚀','🔬','🧲','🌋'];
+function humanCheck(){const pool=shuffle(HC_SET.slice()).slice(0,6);const ans=rnd(pool);const kind=rnd(['emoji','math']);let q,opts,a;
+ if(kind==='math'){const x=2+Math.floor(Math.random()*7),y=2+Math.floor(Math.random()*7);a=String(x+y);q=`${x} + ${y} = ?`;const s=new Set([a]);while(s.size<6)s.add(String(x+y+Math.floor(Math.random()*9)-4));opts=shuffle([...s])}
+ else{q=`「${ans}」 를 눌러 주세요`;opts=pool;a=ans}
+ MAC.hc={a,t:Date.now()+20000};snd('alarm');
+ macroOverlay(`<div style="font-size:48px">🤖❓</div><h2>사람 확인!</h2><p>문제를 아주 빠르게(또는 기계처럼) 풀고 있어요.<br>사람이 맞는지 확인할게요. <b>20초</b> 안에 골라 주세요.</p><p class="j" style="font-size:28px;margin:8px 0">${q}</p><div class="hcbox">${opts.map(o=>`<button class="hcb" style="left:${5+Math.random()*75}%;top:${5+Math.random()*70}%" onclick="hcAns(this,event)">${o}</button>`).join('')}</div><p id="hct" style="font-size:13px;color:#8a7a9a"></p>`);
+ // 버튼 겹침 방지: 격자에 흩뿌리기
+ const bs=[...document.querySelectorAll('.hcb')];const cells=shuffle([...Array(12).keys()]);bs.forEach((b,i)=>{const c=cells[i];b.style.left=(3+(c%4)*24+Math.random()*3)+'%';b.style.top=(3+Math.floor(c/4)*32+Math.random()*2)+'%'});
+ clearInterval(MAC.hcT);MAC.hcT=setInterval(()=>{if(!MAC.hc){clearInterval(MAC.hcT);return}const left=Math.ceil((MAC.hc.t-Date.now())/1000);const el=$('#hct');if(el)el.textContent=`⏱️ ${Math.max(0,left)}초`;if(left<=0){clearInterval(MAC.hcT);hcFail('시간 초과')}},250)}
+function hcAns(b,ev){if(!MAC.hc)return;if(!ev||ev.isTrusted===false)return hcFail('자동 클릭');if(b.textContent===MAC.hc.a){MAC.hc=null;clearInterval(MAC.hcT);snd('ok');$('#macro').style.display='none';toast('✅ 확인 완료! 문제를 천천히 읽고 풀어요 😊');markShown()}else hcFail('틀린 답')}
+function hcFail(why){MAC.hc=null;clearInterval(MAC.hcT);MAC.why=[why];macroStrike()}
 function macroOverlay(html){let d=$('#macro');if(!d){d=document.createElement('div');d.id='macro';document.body.appendChild(d)}d.innerHTML=`<div class="mbox2">${html}</div>`;d.style.display='flex'}
-function macroWarnShow(){snd('alarm');macroOverlay(`<div style="font-size:60px">🤖⚠️</div><h2>경고! 너무 빨라요!</h2><p>문제를 읽지 않고 너무 빠르게 계속 맞히고 있어요.<br>매크로(자동 클릭) 프로그램은 쓸 수 없어요.</p><p style="color:#c0392b;font-family:Jua;font-size:18px">한 번 더 감지되면 왕국이 <u>삭제</u>돼요!</p><button class="btn main" onclick="$('#macro').style.display='none';markShown()">알겠어요, 천천히 풀게요</button>`)}
+function macroWarnShow(){snd('alarm');macroOverlay(`<div style="font-size:60px">🤖⚠️</div><h2>경고! 매크로가 의심돼요!</h2><p>${MAC.why&&MAC.why.length?`<small>감지: ${MAC.why.join(', ')}</small><br>`:''}문제를 직접 읽고 풀어야 해요.<br>매크로(자동 클릭) 프로그램은 쓸 수 없어요.</p><p style="color:#c0392b;font-family:Jua;font-size:18px">한 번 더 감지되면 왕국이 <u>삭제</u>돼요!</p><button class="btn main" onclick="$('#macro').style.display='none';markShown()">알겠어요, 천천히 풀게요</button>`)}
 function macroWipe(){WIPED=true;started=false;try{localStorage.removeItem('sk-save')}catch(e){}B=null;Q=null;snd('no');macroOverlay(`<div style="font-size:60px">🤖💥</div><h2>왕국이 삭제됐어요</h2><p>매크로 사용이 다시 감지되어 왕국이 사라졌어요.<br>문제를 직접 읽고 풀어서 새 왕국을 세워 보세요!</p><button class="btn main" onclick="location.reload()">처음 화면으로</button>`)}
 
 /* 문제 변형: ⭕❌ · 빈칸 */
