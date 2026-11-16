@@ -235,6 +235,8 @@ button{font-family:inherit;color:var(--o)}
 .verlab{position:absolute;right:12px;bottom:8px;font-size:11px;color:#a99bb8}
 .opt.hp{position:absolute!important;left:-9999px!important;top:0;width:1px;height:1px;opacity:0;pointer-events:auto}
 .hcbox{position:relative;height:200px;background:#f4f1f8;border:3px dashed var(--o);border-radius:16px;margin:6px 0}.hcb{position:absolute;width:56px;height:56px;font-size:28px;border:3px solid var(--o);border-radius:14px;background:#fff;cursor:pointer;box-shadow:0 3px 0 var(--o);font-family:Jua;color:var(--o)}.hcb:active{transform:translateY(2px)}
+.klist{display:flex;flex-direction:column;gap:6px}.kcard{display:flex;gap:10px;align-items:flex-start;background:#fffaf0;border:2.5px solid var(--o);border-radius:14px;padding:8px 10px}.kic{width:46px;height:46px;flex:none;border:2.5px solid var(--o);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;background:#f4f1f8}
+.pill.rpready{background:#d6f5d6;animation:pls 1.2s ease-in-out infinite}.pill.rpready small{color:#2b8a3e!important}
 </style></head><body>
 <div id="land"></div>
 <div id="stage"><div id="island"><div id="grid"></div></div></div>
@@ -1530,7 +1532,7 @@ $('#grid').addEventListener('click',e=>{if(DRAG.done){DRAG.done=false;return}con
 
 /* villagers */
 let vils=[];
-function placeVillagers(){const isl=$('#island');const n=Math.min(14,2+Math.floor(pop()/4));
+function placeVillagers(){const isl=$('#island');const n=Math.min(22,2+Math.floor(Math.sqrt(pop())*1.6));
  while(vils.length>n)vils.pop().el.remove();
  vils=vils.filter(v=>isl.contains(v.el));
  while(vils.length<n){const el=document.createElement('div');el.className='vil';el.innerHTML=villSvg(VCOL[vils.length%VCOL.length]);const v={el,x:20+Math.random()*60,y:20+Math.random()*60,nm:VNAME[vils.length%VNAME.length],job:rnd(VJOB)};el.style.left=v.x+'%';el.style.top=v.y+'%';
@@ -1540,7 +1542,7 @@ function showBubble(x,y,v){const b=$('#bubble');b.innerHTML=`<b>🧑‍🔬 ${v?
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('.vil'))$('#bubble').style.display='none'});
 
 /* ---------- build ---------- */
-function doBuild(i,t){const c=buildCost(t);if(!canPay(c)){snd('no');return toast('자원이 부족해요! 🔬 연구하기로 모아 보세요')}
+function doBuild(i,t){if(BD[t].tech&&!hasT(BD[t].tech))return toast('🧪 기술이 필요해요');const c=buildCost(t);if(!canPay(c)){snd('no');return toast('자원이 부족해요! 🔬 연구하기로 모아 보세요')}
  pay(c);curP()[i]={t,lv:1};snd('build');closeM();renderMap(i);renderTop();toast(`🎉 ${jo(BD[t].n,'을','를')} 지었어요!`.replace('을(를)',josa(BD[t].n)));checkQuest();save()}
 function josa(w){const c=w.charCodeAt(w.length-1);return (c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28)?'을':'를'}
 function bPanel(i){if(examGuard())return;const p=curP()[i],d=BD[p.t];const max=p.lv>=5,capped=p.lv>=S.k+1;const c=upCost(p);
@@ -1548,7 +1550,7 @@ function bPanel(i){if(examGuard())return;const p=curP()[i],d=BD[p.t];const max=p
  openM(`<h2>${d.n} <span style="font-size:18px">${'★'.repeat(p.lv)}${'☆'.repeat(5-p.lv)}</span></h2><div class="big">${artOf(p.t)}</div><p style="text-align:center;margin:6px 0">${d.d}</p>
  ${halted(p.t)?`<p style="text-align:center;color:#c0392b;font-family:Jua">${CRISIS[d.f].ic} ${CRISIS[d.f].n} 때문에 멈췄어요! ${FIELDS[d.f].n} 문제를 맞혀 복구해요.</p>`:''}
  ${max?`<p style="text-align:center;font-family:Jua;font-size:18px">🏆 최고 레벨이에요!</p>`:`<div style="text-align:center;font-size:15px">${pr}${d.fx?`<div style="color:#7b5cd6">✨ ${d.fx}</div>`:''}</div><div class="req">${costHtml(c)}</div>${capped?`<p style="text-align:center;font-size:14px;color:#c0392b">성 레벨을 먼저 올려야 더 강화할 수 있어요 (성 Lv${p.lv})</p>`:''}`}
- <div class="row">${max?'':`<button class="btn green" ${capped||!canPay(c)?'disabled':''} onclick="doUp(${i})">⬆️ 업그레이드</button>`}${p.t==='market'?`<button class="btn main" onclick="openMarket()">🏪 거래하기</button>`:''}<button class="btn blue" onclick="startMove(${i})">🔀 옮기기</button><button class="btn sm" id="dem" onclick="demolish(${i},this)">🧹 철거</button></div><p style="text-align:center;font-size:12px;color:#8a7a9a">💡 건물을 꾹 눌러 끌어다 놓아도 옮길 수 있어요</p>`,'bp')}
+ <div class="row">${max?'':`<button class="btn green" ${capped||!canPay(c)?'disabled':''} onclick="doUp(${i})">⬆️ 업그레이드</button>`}${p.t==='market'?`<button class="btn main" onclick="openMarket()">🏪 거래하기</button>`:''}${p.t==='academy'?`<button class="btn main" onclick="openAcademy()">🎓 영재원 가기</button>`:''}${['museum','planet','fest'].includes(p.t)?`<button class="btn main" onclick="openCulture()">🎭 문화 보기</button>`:''}<button class="btn blue" onclick="startMove(${i})">🔀 옮기기</button><button class="btn sm" id="dem" onclick="demolish(${i},this)">🧹 철거</button></div><p style="text-align:center;font-size:12px;color:#8a7a9a">💡 건물을 꾹 눌러 끌어다 놓아도 옮길 수 있어요</p>`,'bp')}
 function doUp(i){const p=curP()[i];const c=upCost(p);if(!canPay(c)||p.lv>=5||p.lv>=S.k+1)return;pay(c);p.lv++;snd('build');renderMap();renderTop();bPanel(i);const el=document.querySelector(`.plot[data-i="${i}"]`);if(el){el.classList.add('new');floatAt(el,'⬆️ Lv'+p.lv,'#2b8a3e')}checkQuest();save()}
 function demolish(i,b){if(!b.dataset.ok){b.dataset.ok=1;b.textContent='정말 철거할까요? (한 번 더)';return}const P=curP(),p=P[i];const back=scale(BD[p.t].cost,.3);for(const k in back)S.res[k]+=back[k];delete P[i];closeM();renderMap();renderTop();toast('🧹 철거했어요. 재료 일부를 돌려받았어요');save()}
 function castlePanel(){if(examGuard())return;const c=castleCost(),need=CR[S.k]||0,max=S.k>=10;const ok=!max&&canPay(c)&&S.total>=need;
@@ -1861,8 +1863,15 @@ const TECH={
  comp:{n:'컴퓨터',ic:'💻',era:4,cost:140,req:['elec'],d:'전투 책략 +1회'},
  drone:{n:'드론',ic:'🛸',era:4,cost:150,req:['robot','radio'],d:'새 병종 🛸드론 궁병 (힘 1.8)'},
  fusion:{n:'핵융합',ic:'☀️',era:4,cost:180,req:['elec','med'],d:'모든 생산 +25%'},
+ brick:{n:'벽돌 건축',ic:'🧱',era:2,cost:35,req:['farm'],d:'🏘️ 빌라 건설 가능 (주민 +12)'},
+ concrete:{n:'철근 콘크리트',ic:'🏗️',era:3,cost:75,req:['brick','steam'],d:'🏢 아파트 건설 가능 (주민 +25)'},
+ sky:{n:'초고층 건축',ic:'🌆',era:4,cost:150,req:['concrete','elec'],d:'🏙️ 스카이 타워 건설 가능 (주민 +50)'},
+ space:{n:'우주 개발',ic:'🚀',era:5,cost:260,req:['fusion','comp'],d:'모든 생산 +20% · 전투력 +10%'},
+ ai:{n:'인공지능',ic:'🧠',era:5,cost:260,req:['comp'],d:'문제 보상 +20% · 정답마다 연구점수 +1'},
+ arco:{n:'우주 도시',ic:'🪐',era:5,cost:320,req:['sky','space'],d:'🛰️ 우주 거주 돔 건설 가능 (주민 +100)'},
+ quantum:{n:'양자 컴퓨터',ic:'⚛️',era:5,cost:380,req:['ai'],d:'🔬 연구소 효과 2배 · 기술 보너스 2배'},
 };
-const ERA_K=[0,1,3,5,7],ERA_N=['','고대','근대','산업','미래'];
+const ERA_K=[0,1,3,5,7,9],ERA_N=['','고대','근대','산업','미래','우주'];
 const hasT=t=>!!(S.tech&&S.tech.includes(t));
 const ITEMS={scope:{n:'망원경',ic:'🔭',i:8,l:4},coil:{n:'테슬라 코일',ic:'⚡',w:10},compass:{n:'나침반',ic:'🧭',l:8},goggle:{n:'보안경',ic:'🥽',w:4,l:4},protr:{n:'각도기',ic:'📐',i:6,l:6},beaker:{n:'비커 방패',ic:'🧪',l:10},micro:{n:'현미경',ic:'🔬',i:10},magnet:{n:'강력 자석',ic:'🧲',w:8,l:4}};
 const STRAT={fire:{n:'화공',ic:'🔥',i:85,d:'공격 1.8배'},ambush:{n:'매복',ic:'🌿',i:80,d:'받는 피해 -70%'},sow:{n:'이간계',ic:'🗣️',i:90,d:'적 12% 이탈'},drum:{n:'북소리',ic:'🥁',i:0,d:'공격 1.3배·사기+5'},wall:{n:'철벽',ic:'🛡️',i:0,d:'2라운드 피해 절반'}};
@@ -1889,7 +1898,7 @@ const score=()=>Math.round(S.total*10+S.best*20+myTerr().length*150+S.k*100+(S.t
 const garrTotal=()=>Object.values(S.garr||{}).reduce((a,g)=>a+tc(g.t),0);
 const gname=g=>g?GEN[g].n:'수비대';
 function gx(g){S.gx=S.gx||{};return S.gx[g]=S.gx[g]||{xp:0,lv:1,eq:null}}
-function gStat(g){if(!g)return{w:50,i:50,l:50,lv:1};const G=GEN[g],x=S.gx&&S.gens.includes(g)?S.gx[g]:null;const lv=x?x.lv:1,it=x&&x.eq?ITEMS[x.eq]:{};return{w:G.w+(lv-1)*3+(it.w||0),i:G.i+(lv-1)*2+(it.i||0),l:G.l+(lv-1)*3+(it.l||0),lv}}
+function gStat(g){if(!g)return{w:50,i:50,l:50,lv:1};const G=GEN[g],x=S.gx&&S.gens.includes(g)?S.gx[g]:null;const lv=x?x.lv:1,it=x&&x.eq?ITEMS[x.eq]:{};const kb=G.kid?2*acadLv()+(G.gen?8:0):0;return{w:G.w+(lv-1)*3+(it.w||0)+kb,i:G.i+(lv-1)*2+(it.i||0)+kb,l:G.l+(lv-1)*3+(it.l||0)+kb,lv}}
 const gMult=g=>{if(!g)return 1.1;const s=gStat(g);return 1+(s.w+s.l)/400};
 function gainXP(g,a){if(!g||!S.gens.includes(g))return'';const x=gx(g);x.xp+=a;let up='';while(x.lv<10&&x.xp>=x.lv*50){x.xp-=x.lv*50;x.lv++;up=`<span class="rw" style="background:#fff3c4">⭐ ${GEN[g].n} Lv${x.lv}!</span>`}return up}
 function busyGen(g){return Object.values(S.garr||{}).some(x=>x.g===g)}
@@ -1909,12 +1918,12 @@ function rates(){const r={gold:2*S.k,energy:0,element:0,life:0,mineral:0};const 
  for(const p of allPlots()){const d=BD[p.t];if(d.f&&S.crisis&&S.crisis.f===d.f)continue;for(const k in d.prod)r[k]+=d.prod[k]*p.lv*m}
  for(const w of myTerr()){if(inRevolt(w.id))continue;const lf=.5+(S.loy[w.id]??60)/200;r[w.r]+=w.p*m*lf;r.gold+=3*lf}
  S.nations.forEach((N,i)=>{if(N.trade&&!N.war&&!N.fallen)r[FIELDS[NAT[i].f].r]+=(5+2*S.k)*(hasT('sail')?1.5:1)});
- let all=1+(hasT('steam')?.1:0)+(hasT('fusion')?.25:0);for(const k in r)r[k]*=all;
- if(hasT('farm'))r.life*=1.15;if(hasT('elec'))r.energy*=1.25;
+ let all=1+(hasT('steam')?.1:0)+(hasT('fusion')?.25:0)+(hasT('space')?.2:0)+techBonus();r.gold+=pop()*.15;for(const k in r)r[k]*=all;
+ r.gold*=(1+.03*cultLv())*(1+.15*minP('fin'));if(hasT('farm'))r.life*=1.15;if(hasT('elec'))r.energy*=1.25;
  const si=seasonIdx();if(si===0)r.life*=1.2;if(si===1)r.energy*=1.2;if(si===2){r.gold*=1.3;r.life*=1.3}if(si===3)r.mineral*=1.2;
  r.life-=(tc()+garrTotal())*.04*(si===3?1.5:1);return r}
 function renderTop(){const r=rates();const si=seasonIdx(),SE=SEASONS[si];const ti=curTitle();
- $('#top').innerHTML=`<div class="kname" onclick="openProfile()"><b>🏰 ${S.name}</b><small>${ti?ti+' · ':''}${TITLES[S.k-1]} · Lv${S.k} · ${S.cls?'📚'+S.cls.name:LEVELS[S.lvl][1]}</small></div>`+RK.map(k=>`<div class="pill j" id="p-${k}" title="${RES[k].n} · 1분에 ${fmt(r[k])}">${RES[k].ic}<span>${fmt(S.res[k])}</span><small>${r[k]<0?'':'+'}${fmt(r[k])}/분</small></div>`).join('')+`<div class="pill j" id="p-pop" title="인구">👥<span>${pop()}</span></div><div class="pill j" id="p-army" title="병력" onclick="openArmy()" style="cursor:pointer">⚔️<span>${fmt(tc())}</span></div><div class="pill j" id="p-mor" title="사기">🔥<span>${Math.round(S.morale)}</span></div><div class="pill j" id="p-sea" title="${SE.d}">${SE.ic}<span>${yearN()}년 ${SE.n}</span></div><div class="sp"></div><button class="ibtn" onclick="openSettings()" title="설정">⚙️</button>`}
+ $('#top').innerHTML=`<div class="kname" onclick="openProfile()"><b>🏰 ${S.name}</b><small>${ti?ti+' · ':''}${TITLES[S.k-1]} · Lv${S.k} · ${S.cls?'📚'+S.cls.name:LEVELS[S.lvl][1]}</small></div>`+RK.map(k=>`<div class="pill j" id="p-${k}" title="${RES[k].n} · 1분에 ${fmt(r[k])}">${RES[k].ic}<span>${fmt(S.res[k])}</span><small>${r[k]<0?'':'+'}${fmt(r[k])}/분</small></div>`).join('')+`<div class="pill j" id="p-pop" title="인구">👥<span>${pop()}</span></div><div class="pill j ${canResearch()?'rpready':''}" id="p-rp" title="기술" onclick="openTech()" style="cursor:pointer">🧪<span>${S.tech.length}</span>${canResearch()?'<small>연구 가능!</small>':''}</div><div class="pill j" id="p-army" title="병력" onclick="openArmy()" style="cursor:pointer">⚔️<span>${fmt(tc())}</span></div><div class="pill j" id="p-mor" title="사기">🔥<span>${Math.round(S.morale)}</span></div><div class="pill j" id="p-sea" title="${SE.d}">${SE.ic}<span>${yearN()}년 ${SE.n}</span></div><div class="sp"></div><button class="ibtn" onclick="openSettings()" title="설정">⚙️</button>`}
 function renderRes(){const r=rates();for(const k of RK){const p=$('#p-'+k);if(!p)continue;p.children[0].textContent=fmt(S.res[k]);p.children[1].textContent=(r[k]<0?'':'+')+fmt(r[k])+'/분'}const a=$('#p-army');if(a)a.children[0].textContent=fmt(tc());const mo=$('#p-mor');if(mo)mo.children[0].textContent=Math.round(S.morale);const pp=$('#p-pop');if(pp)pp.children[0].textContent=pop()}
 
 /* ===================== v5: 문제 ===================== */
@@ -1927,7 +1936,7 @@ function pickQ(f){const lv=S.lvl;let raw=null,fixed=true;const g=GENQ[lv]&&GENQ[
  return variantQ({f,q:raw[1],a:raw[2],opts:shuffle(raw.slice(2,6)),ex:raw[6],done:false,fixed,lv})}
 function setField(f){S.field=f;S.unit=null;snd('click');newQ()}
 function setUnit(u){S.unit=u||null;snd('click');newQ()}
-function gainCorrect(q){S.rp=(S.rp||0)+1;if(S.cls)S.clsDone=(S.clsDone||0)+1;if(q.fixed){const key=q.lv+'|'+q.q;if(!S.dex[key]){S.dex[key]=1;checkDexTitle(q.lv,q.f)}}}
+function gainCorrect(q){S.rp=(S.rp||0)+1+(hasT('ai')?1:0)+(Math.random()<minP('sci')*.5?1:0);kidXP(q.f,4);if(S.cls)S.clsDone=(S.clsDone||0)+1;if(q.fixed){const key=q.lv+'|'+q.q;if(!S.dex[key]){S.dex[key]=1;checkDexTitle(q.lv,q.f)}}}
 function checkDexTitle(lv,f){const tot=QB[lv].filter(x=>x[0]===f).length;const got=QB[lv].filter(x=>x[0]===f&&S.dex[lv+'|'+x[1]]).length;const t=`${LEVELS[lv][1]} ${FIELDS[f].n} 박사`;if(got>=tot&&!S.titles.includes(t)){S.titles.push(t);setTimeout(()=>{toast(`🎓 칭호 획득: ${t}!`,3500);snd('lv');confetti()},400)}}
 function drawQ(){const F=FIELDS[Q.f];const al=allowedFields();
  const chips=[...(al.length>1?[['mix','🎲 골고루','#ffcf3f']]:[]),...al.map(k=>[k,FIELDS[k].ic+' '+FIELDS[k].n,FIELDS[k].c])].map(([k,n,c])=>`<button class="chip ${S.field===k||(al.length===1&&k===al[0])?'on':''}" style="--cc:${c}" onclick="setField('${k}')">${n}</button>`).join('');
@@ -1938,7 +1947,7 @@ function drawQ(){const F=FIELDS[Q.f];const al=allowedFields();
  ${S.cls?`<div class="clsbar">📚 수업 <b>${S.cls.name}</b> · 목표 ${Math.min(S.clsDone,S.cls.goal)}/${S.cls.goal}문제 ${S.clsDone>=S.cls.goal?'✅ 달성!':''}</div>`:''}
  <div class="qcard"><span class="qtag" style="background:${F.c}">${F.ic} ${F.n} · ${LEVELS[S.lvl][1]}${cu?' · '+cu:''}</span>${Q.gold?' <span class="qtag gold">🌟 황금 문제! 맞히면 💰×5</span>':''}${S.crisis&&S.crisis.f===Q.f?` <span class="qtag" style="background:#ffd6d6">${CRISIS[Q.f].ic} 복구 문제!</span>`:''}<div class="qtext">${Q.disp||Q.q}</div></div>
  <div id="opts" class="${Q.type==='ox'?'ox':''}">${Q.opts.map((o,i)=>`<button class="opt" onclick="answer(${i},event)"><b>${i+1}</b><span>${o}</span></button>`).join('')}</div><div id="qres"></div>`,'quiz');markShown()}
-function reward(){const lib=sumLv('library'),sch=sumLv('school');let m=1+.1*lib+(hasT('write')?.1:0);let sm=S.streak>=5?2:S.streak>=3?1.5:1;if(sm>1)sm+=.05*sch;return{v:Math.round((10+2*S.k)*m*sm),g:Math.round((4+S.k)*m),sm}}
+function reward(){const lib=sumLv('library'),sch=sumLv('school');let m=1+.1*lib+(hasT('write')?.1:0)+(hasT('ai')?.2:0)+.15*minP('edu');let sm=S.streak>=5?2:S.streak>=3?1.5:1;if(sm>1)sm+=.05*sch;return{v:Math.round((10+2*S.k)*m*sm),g:Math.round((4+S.k)*m),sm}}
 function answer(i,ev){if(!Q||Q.done||i>=Q.opts.length)return;const ok=Q.opts[i]===Q.a;if(macroCheck(ok,ev))return;Q.done=true;S.tries++;clsLogPush(Q,Q.opts[i],ok);
  const btns=[...document.querySelectorAll('#opts .opt')];btns.forEach((b,j)=>{b.disabled=true;if(Q.opts[j]===Q.a)b.classList.add('ok');else if(j===i)b.classList.add('no')});
  const F=FIELDS[Q.f];let h='';
@@ -1962,7 +1971,7 @@ function compPow(t,vs,city,gen,isMe){let p=0;const tot=tc(vs)||1;const s=sk(gen)
   if((s==='storm'&&k==='cav')||(s==='orbit'&&k==='arc'))m*=1.4;if(s==='pea'&&k==='inf')m*=1.3;if(s==='lever'&&k==='sie')m*=1.6;if(s==='vinci')m*=1.15;
   if(isMe){if(hasT('bow')&&k==='arc')m*=1.1;if(hasT('powder')&&k==='sie')m*=1.25}
   p+=n*m}
- return p*gMult(gen)*(isMe?moraleM():1)}
+ return p*gMult(gen)*(isMe?moraleM()*(1+.1*minP('def')):1)}
 const splitC=(n,mix)=>{const r={};UK.forEach((k,i)=>r[k]=Math.round(n*(mix[i]||0)));return r};
 function genCard(g,sel,act){const G=GEN[g],st=gStat(g),x=S.gens.includes(g)?gx(g):null;const busy=busyGen(g);
  return `<div class="gcard ${sel?'on':''}" onclick="${act||''}"><div class="gp">${genSvg(g)}${x?`<span class="glv">Lv${x.lv}</span>`:''}</div><div class="gi"><b>${G.n}</b> <span class="cost" style="background:${FIELDS[G.f].c}">${FIELDS[G.f].ic}</span>${x&&x.eq?` <span class="cost">${ITEMS[x.eq].ic}</span>`:''}${busy?' <span class="cost">🏯주둔</span>':''}<div class="st">무${st.w} · 지${st.i} · 통${st.l}${x?` · XP ${x.xp}/${x.lv*50}`:''}</div><div class="sk">✨${G.skn}: ${G.skd}</div></div></div>`}
@@ -2018,22 +2027,22 @@ function aiTurn(){if(S.play<360||S.k<2)return;
  for(const w of myTerr()){const ly=S.loy[w.id]??60;if(ly<25&&Math.random()<(25-ly)/50){const G=S.garr[w.id];
   if(G&&tc(G.t)>=30){UK.forEach(k=>G.t[k]=Math.floor((G.t[k]||0)*.7));S.loy[w.id]=ly+15;news(`⚠️ ${w.n}에서 반란이 일어났지만 주둔군이 진압했어요`)}
   else if(!inRevolt(w.id)){S.revolt=S.revolt||{};S.revolt[w.id]=S.play+180;snd('alarm');news(`🔥 ${w.n}에서 반란! 3분 안에 민심을 40으로 올리거나 주둔군 30명을 보내 진압하지 않으면 독립해요!`)}}}
- aiDiplo();aiExpand();if(Math.random()<.5)aiExpand();renderTop();renderWorld()}
+ aiDiplo();cultureTurn();aiExpand();if(Math.random()<.5)aiExpand();renderTop();renderWorld()}
 let _achT=0;
-function warTick(dt){revoltTick();S.nations.forEach((N,i)=>{if(!N.fallen)N.pow+=dt/60*(3+S.k*.6)*nTechM(i)});
+function warTick(dt){revoltTick();S.rp=(S.rp||0)+sumLv('lab')*(hasT('quantum')?2:1)*dt/90;cultTick(dt);kidXP(null,dt/20);S.nations.forEach((N,i)=>{if(!N.fallen)N.pow+=dt/60*(3+S.k*.6)*nTechM(i)});
  if(S.res.life<0){S.res.life=0}
  if(S.res.life<=0.5&&tc()+garrTotal()>0){S.morale=Math.max(10,S.morale-dt/60*4)}else if(S.morale<70)S.morale=Math.min(70,S.morale+dt/60*1.5);
- const lb=.6+.15*(sumLv('school')+sumLv('library'))+happy()*.02;for(const w of myTerr()){let l=S.loy[w.id]??60;l+=dt/60*(lb+(S.garr[w.id]&&tc(S.garr[w.id].t)>0?.5:0)-(S.morale<30?1.2:0)-(seasonIdx()===3?.3:0));S.loy[w.id]=Math.max(0,Math.min(100,l))}
+ const lb=.6+.15*(sumLv('school')+sumLv('library'))+happy()*.02+.15*cultLv();for(const w of myTerr()){let l=S.loy[w.id]??60;l+=dt/60*(lb+(S.garr[w.id]&&tc(S.garr[w.id].t)>0?.5:0)-(S.morale<30?1.2:0)-(seasonIdx()===3?.3:0));S.loy[w.id]=Math.max(0,Math.min(100,l))}
  const si=seasonIdx();if(si!==S.lastSeason){S.lastSeason=si;const SE=SEASONS[si];toast(`${SE.ic} ${yearN()}년 ${SE.n}이 왔어요! ${SE.d}`,3500);renderTop()}
  S.aiT+=dt;if(S.aiT>=80){S.aiT=0;aiTurn()}
  scenTick();_achT+=dt;if(_achT>=2){_achT=0;checkAch()}}
 
 /* ===================== v5: 더보기 허브 ===================== */
 /* 기술 트리 */
-function openTech(){const rows=[1,2,3,4].map(e=>{const lock=S.k<ERA_K[e];return `<h3 style="margin:8px 0 4px">${['','🪨','⚙️','🏭','🚀'][e]} ${ERA_N[e]} 시대 ${lock?`<small style="color:#c0392b">🔒 성 Lv${ERA_K[e]} 필요</small>`:''}</h3><div class="techs">${Object.entries(TECH).filter(([k,t])=>t.era===e).map(([k,t])=>{const own=hasT(k),req=(t.req||[]).every(hasT),can=!own&&!lock&&req&&S.rp>=t.cost;
+function openTech(){const rows=[1,2,3,4,5].map(e=>{const lock=S.k<ERA_K[e];return `<h3 style="margin:8px 0 4px">${['','🪨','⚙️','🏭','💻','🚀'][e]} ${ERA_N[e]} 시대 ${lock?`<small style="color:#c0392b">🔒 성 Lv${ERA_K[e]} 필요</small>`:''}</h3><div class="techs">${Object.entries(TECH).filter(([k,t])=>t.era===e).map(([k,t])=>{const own=hasT(k),req=(t.req||[]).every(hasT),can=!own&&!lock&&req&&S.rp>=t.cost;
   return `<div class="tech ${own?'own':can?'can':''}"><div class="tic">${t.ic}</div><b>${t.n}</b><small>${t.d}</small>${t.req?`<small class="treq">필요: ${t.req.map(r=>(hasT(r)?'✅':'⬜')+TECH[r].n).join(' ')}</small>`:''}${own?'<span class="tok2">✅ 완료</span>':`<button class="btn sm ${can?'green':''}" ${can?'':'disabled'} onclick="research('${k}')">🧪${t.cost}</button>`}</div>`}).join('')}</div>`}).join('');
- openM(`<h2>🧪 기술 연구</h2><p>🧪 연구점수 <b class="j" style="font-size:22px">${S.rp||0}</b> <small>(문제를 맞힐 때마다 +1 — 연구·전투·면접 모두!)</small></p>${rows}`,'tech')}
-function research(k){const t=TECH[k];if(hasT(k)||S.rp<t.cost||S.k<ERA_K[t.era]||!(t.req||[]).every(hasT))return;S.rp-=t.cost;S.tech.push(k);snd('lv');confetti();news(`🧪 새 기술 ${t.ic}${jo(t.n,'을','를')} 개발했어요!`);renderTop();openTech();checkAch();save()}
+ openM(`<h2>🧪 기술 연구</h2><p>🧪 연구점수 <b class="j" style="font-size:22px">${Math.floor(S.rp||0)}</b> <small>(문제를 맞힐 때마다 +1 · 🔬연구소가 자동으로 모아요)</small></p>${techSummary()}${rows}`,'tech')}
+function research(k){const t=TECH[k];if(hasT(k)||S.rp<t.cost||S.k<ERA_K[t.era]||!(t.req||[]).every(hasT))return;S.rp-=t.cost;S.tech.push(k);_tcache=null;snd('lv');confetti();news(`🧪 새 기술 ${t.ic}${jo(t.n,'을','를')} 개발했어요!`);renderTop();openTech();checkAch();save()}
 
 /* 도감 */
 let dexLv=null,dexF=null;
@@ -2290,7 +2299,7 @@ function openSettings(){const on=!!dbUrl();openM(`<h2>⚙️ 설정</h2>
  <p style="font-size:13px;color:#8a7a9a;margin-top:10px;text-align:center">진행 상황은 이 브라우저에 자동 저장돼요.${S.cloud?' ☁️ 클라우드에도 저장 중!':''}</p>
  <div class="row"><button class="btn sm pink" onclick="if(!this.dataset.ok){this.dataset.ok=1;this.textContent='⚠️ 정말 처음부터? (한 번 더)';return}localStorage.removeItem('sk-save');location.reload()">🗑️ 처음부터 다시</button></div>`,'set')}
 function openHub(){if(examGuard())return;snd('click');const b=(ic,n,d,f)=>`<button class="hubb" onclick="${f}"><span>${ic}</span><b>${n}</b><small>${d}</small></button>`;
- openM(`<h2>📚 더보기</h2>${examAvail()?`<div class="exbanner" onclick="examIntro()">📝 <b>${esc(S.cls.name)}</b> 시험이 기다리고 있어요! (${S.cls.exam.n}문제 · ${S.cls.exam.min}분) <u>시험 보기 ▶</u></div>`:''}<div class="hub">${b('📒','연구 노트','정답률·오답·결과 코드','openReport()')}${b('🧪','기술 연구',`연구점수 ${S.rp||0}`,'openTech()')}${b('📖','과학 도감',`${Object.keys(S.dex).length}장 수집`,'openDex()')}${b('🏆','업적',`${Object.keys(S.ach).length}/${ACH.length} · ${score()}점`,'openAch()')}${S.cls&&S.cls.room?b('🏫','반 대항전','반끼리 점수 경쟁','openLeagueStu()'):''}${b('👩‍🏫','선생님 모드','수업·퀴즈쇼·온라인 반','openTeacher()')}${b('🏪','시장','자원 팔아 골드',"openMarket()")}${b('🎁','출석 보상',`${S.dStreak||0}일 연속`,'showDaily(true)')}${b('🎟️','쿠폰','코드 입력하고 보상 받기','openCoupon()')}${b('📸','사진 찍기','마을·지도 저장','openPhoto()')}${b('📢','업데이트 내용',VERSION+' 패치 노트','showPatch()')}${b('⚙️','설정','반 코드·클라우드·소리','openSettings()')}</div>`,'hub')}
+ openM(`<h2>📚 더보기</h2>${examAvail()?`<div class="exbanner" onclick="examIntro()">📝 <b>${esc(S.cls.name)}</b> 시험이 기다리고 있어요! (${S.cls.exam.n}문제 · ${S.cls.exam.min}분) <u>시험 보기 ▶</u></div>`:''}<div class="hub">${b('📒','연구 노트','정답률·오답·결과 코드','openReport()')}${b('🧪','기술 연구',`연구점수 ${Math.floor(S.rp||0)}`,'openTech()')}${b('📖','과학 도감',`${Object.keys(S.dex).length}장 수집`,'openDex()')}${b('🏆','업적',`${Object.keys(S.ach).length}/${ACH.length} · ${score()}점`,'openAch()')}${S.cls&&S.cls.room?b('🏫','반 대항전','반끼리 점수 경쟁','openLeagueStu()'):''}${b('👩‍🏫','선생님 모드','수업·퀴즈쇼·온라인 반','openTeacher()')}${b('🎓','영재원',`인재 ${(S.kids||[]).length}명`,"openAcademy()")}${b('🎭','문화',`Lv${cultLv()} · ${CULT_N[cultLv()]||'시작'}`,"openCulture()")}${b('🏪','시장','자원 팔아 골드',"openMarket()")}${b('🎁','출석 보상',`${S.dStreak||0}일 연속`,'showDaily(true)')}${b('🎟️','쿠폰','코드 입력하고 보상 받기','openCoupon()')}${b('📸','사진 찍기','마을·지도 저장','openPhoto()')}${b('📢','업데이트 내용',VERSION+' 패치 노트','showPatch()')}${b('⚙️','설정','반 코드·클라우드·소리','openSettings()')}</div>`,'hub')}
 function showTitle(){const sv=load();const t=$('#title');t.style.display='flex';started=false;const on=!!dbUrl();
  t.innerHTML=`<div class="tcard" style="position:relative"><div style="width:150px;height:130px;margin:0 auto">${artOf('castle',7)}</div><div class="logo">과학 <span>킹덤</span></div><div class="verlab">${VERSION} · ${BUILD}</div><p class="j" style="font-size:16px;margin:4px 0 10px">과학 문제를 풀어 나만의 왕국을 키워요!</p>
  ${sv?`<button class="btn main" style="width:100%;margin-bottom:10px" onclick="startGame(true)">▶ 이어하기 · ${esc(sv.name)} (Lv${sv.k})</button><p style="font-size:13px;margin-bottom:4px">또는 새 왕국 만들기</p>`:''}
@@ -2323,7 +2332,7 @@ function newNat(i){return{rel:i<4?Math.round(Math.random()*30-10):Math.round(Mat
 function initWorld(){syncRebels(null);const terr={0:'me'};for(const w of WORLD){if(w.map!=='oce'){terr[w.id]=w.own??null;continue}if(w.cap!=null)terr[w.id]=w.cap}[[5,0],[6,0],[7,1],[8,1],[9,2],[10,2],[11,3],[12,3]].forEach(([i,o])=>terr[i]=o);for(let i=13;i<=18;i++)terr[i]=null;
  const nat=NAT.map((_,i)=>newNat(i));nat[Math.floor(Math.random()*4)].rel=-35;return{terr,nat}}
 function migrateWorld(s){if(s.nations.length<NAT.length){for(let i=s.nations.length;i<NAT.length;i++){s.nations.push(newNat(i));s.ngens[i]=(NGEN[i]||[]).slice()}}
- for(const w of WORLD)if(s.terr[w.id]===undefined)s.terr[w.id]=w.own??null;s.fleet=s.fleet||0;s.air=s.air||0;s.auxCD=s.auxCD||{};s.cities=s.cities||{};aiInit(s);return s}
+ for(const w of WORLD)if(s.terr[w.id]===undefined)s.terr[w.id]=w.own??null;s.fleet=s.fleet||0;s.air=s.air||0;s.kids=s.kids||[];s.mins=s.mins||{};s.cul=s.cul||0;regKids(s);s.auxCD=s.auxCD||{};s.cities=s.cities||{};aiInit(s);return s}
 
 /* 지도 생성 */
 const _maps={};
@@ -2428,7 +2437,7 @@ function startBattle(mode,tid,ni,en,egen,src,aux){src=src||'main';const gar=src!
  const my={...(gar?gar.t:S.troops)};for(const k of UK)my[k]=my[k]||0;const mil=mode==='def'?(src==='main'?wallDef():S.k*10):0;const myC={...my,inf:my.inf+mil};if(aux)for(const k of UK)myC[k]=(myC[k]||0)+(aux[k]||0);
  const city=mode==='atk'?S.terr[tid]!=null:false;const siege=mode==='atk'&&WORLD[tid].cap!=null;const naval=mode==='atk'&&seaOnly(tid)&&!AIRLIFT;const lift=AIRLIFT;AIRLIFT=false;const air=src==='main'?(S.air||0):0;const aa=ni!=null&&((S.ntech||[])[ni]||0)>=7;
  let P0=compPow(myC,en,city,g,true)+(src==='main'?allyBonus():0);if(mode==='def')P0*=(1+S.k*.05)*(s==='rain'?1.35:1)*(hasT('radio')?1.15:1)*(1+Math.min(.4,air*.03)*(aa?.5:1));
- let E0=compPow(en,myC,mode==='def'&&tid===0,egen,false)*(s==='grav'?.8:1);
+ P0*=techAdv(ni)*(hasT('space')?1.1:1);let E0=compPow(en,myC,mode==='def'&&tid===0,egen,false)*(s==='grav'?.8:1);
  const FP0=Math.max(1,(S.fleet||0)*15*(hasT('sail')?1.3:1)*gMult(g)),N0=Math.max(1,islandDef(WORLD[tid])*(S.terr[tid]==null?.25:.35));
  B={mode,tid,ni,egen,g,src,my0:my,myC,en0:{...en},P0:Math.max(1,P0),E0:Math.max(1,E0),fm:1,fe:1,r:0,maxR:(s==='rel'?5:4)+(siege?1:0)+(naval?1:0),streak:0,free:s==='scope',done:false,log:[],sp:2+(hasT('comp')?1:0),plan:null,wallR:0,siege,wl:siege?1:0,W0:Math.max(1,E0*.7),naval,fl:1,nl:naval?1:0,FP0,N0,auxN:aux?tc(aux):0,air,aa,lift};
  if(aux)B.log.push(`💞 동맹 원군 ${fmt(tc(aux))}명이 합류했어요!`);
@@ -2539,13 +2548,13 @@ Object.assign(BD,{
 for(const t in BD){const d=BD[t];if(d.hap)d.fx=`😊 행복 +${d.hap} (레벨당) · 민심·인구 증가`;if(!d.cat)d.cat=d.f?'prod':['house','school','library'].includes(t)?'life':t==='barracks'?'mil':t==='fountain'?'deco':'life'}
 BD.fountain.hap=2;BD.fountain.fx='모든 생산량 +5% · 😊 행복 +2 (레벨당)';
 const happy=()=>allPlots().reduce((a,p)=>a+(BD[p.t].hap||0)*p.lv,0);
-const pop=()=>6+5*sumLv('house')+2*S.k+Math.floor(happy()/2);
+const pop=()=>6+5*sumLv('house')+12*sumLv('villa')+25*sumLv('apt')+50*sumLv('tower')+100*sumLv('dome')+2*S.k+Math.floor(happy()/2)+(S.cul!=null?cultLv():0);
 const BCATS=[['all','전체'],['life','🏠 생활'],['prod','🏭 생산'],['mil','⚔️ 군사'],['deco','🌸 장식']];
 let bTab='all';
 function buildMenu(i,tab){if(examGuard())return;if(tab)bTab=tab;const keys=Object.keys(BD).filter(t=>bTab==='all'||BD[t].cat===bTab);
- const list=keys.map(t=>{const d=BD[t],c=buildCost(t),lock=S.k<d.k,ok=!lock&&canPay(c);
+ const list=keys.map(t=>{const d=BD[t],c=buildCost(t),tl=d.tech&&!hasT(d.tech),lock=S.k<d.k||tl,ok=!lock&&canPay(c);
   const pr=Object.keys(d.prod).map(k=>`${RES[k].ic}+${d.prod[k]}/분`).join(' ');
-  return `<div class="bitem ${lock?'lock':ok?'':'dis'}" onclick="${lock?`toast('🔒 성 Lv${d.k}에서 지을 수 있어요')`:`doBuild(${i},'${t}')`}"><div class="art">${artOf(t)}</div><div class="inf"><b>${d.n}</b>${d.f?` <span class="cost" style="background:${FIELDS[d.f].c}">${FIELDS[d.f].ic}${FIELDS[d.f].n}</span>`:''}<br>${d.d}<br>${pr?`<b style="font-size:14px">생산 ${pr}</b>`:''}${d.fx?`<b style="font-size:14px;color:#7b5cd6"> ✨${d.fx}</b>`:''}<br>${lock?`<span class="cost bad">🔒 성 Lv${d.k} 필요</span>`:costHtml(c)}</div></div>`}).join('');
+  return `<div class="bitem ${lock?'lock':ok?'':'dis'}" onclick="${lock?(tl?`toast('🧪 기술 「${TECH[d.tech].n}」을(를) 먼저 연구해요')`:`toast('🔒 성 Lv${d.k}에서 지을 수 있어요')`):`doBuild(${i},'${t}')`}"><div class="art">${artOf(t)}</div><div class="inf"><b>${d.n}</b>${d.f?` <span class="cost" style="background:${FIELDS[d.f].c}">${FIELDS[d.f].ic}${FIELDS[d.f].n}</span>`:''}<br>${d.d}<br>${pr?`<b style="font-size:14px">생산 ${pr}</b>`:''}${d.fx?`<b style="font-size:14px;color:#7b5cd6"> ✨${d.fx}</b>`:''}<br>${lock?(tl?`<span class="cost bad">🧪 ${TECH[d.tech].ic}${TECH[d.tech].n} 필요</span> `:'')+(S.k<d.k?`<span class="cost bad">🔒 성 Lv${d.k} 필요</span>`:''):costHtml(c)}</div></div>`}).join('');
  openM(`<h2>🔨 무엇을 지을까요?</h2><div class="chips" style="margin:0 40px 8px 0">${BCATS.map(([k,n])=>`<button class="chip ${bTab===k?'on':''}" onclick="buildMenu(${i},'${k}')">${n}</button>`).join('')}</div><p style="margin-bottom:10px;font-size:14px">😊 행복 <b>${happy()}</b> (장식 건물로 올려요) · 자원이 모자라면 <b>🔬 연구하기</b>에서 문제를 풀어 모아요!</p><div class="blist">${list||'<p>이 분류에는 건물이 없어요.</p>'}</div>`,'build')}
 Object.assign(ART,{
  port:()=>`${sh}<rect x="6" y="66" width="88" height="26" rx="8" fill="#7fd6f5" ${st}/><path d="M10 78 q8 -5 16 0 t16 0 t16 0 t16 0 t16 0" stroke="#fff" stroke-width="2.5" fill="none" opacity=".8"/><rect x="12" y="56" width="44" height="10" rx="2" fill="#c8955f" ${st}/><line x1="18" y1="66" x2="18" y2="82" stroke="${O}" stroke-width="3"/><line x1="50" y1="66" x2="50" y2="82" stroke="${O}" stroke-width="3"/><g class="bob"><path d="M58 70 L92 70 L86 82 L64 82 Z" fill="#ff8f8f" ${st}/><line x1="74" y1="70" x2="74" y2="40" stroke="${O}" stroke-width="3"/><path d="M75 42 L92 64 L75 64 Z" fill="#fff" ${st}/></g><rect x="20" y="20" width="8" height="36" fill="#ffd84d" ${st}/><path d="M24 22 L50 22 L50 30" fill="none" stroke="${O}" stroke-width="3"/>${face(36,46,.5)}`,
@@ -2577,9 +2586,10 @@ async function takePhoto(kind){snd('click');const el=$('#photo');el.innerHTML='�
  const png=await svgToPng(svgS,w,h);snd('coin');el.innerHTML=`<img src="${png}" style="width:100%;border:3px solid ${O};border-radius:14px"><div class="row"><a class="btn main" href="${png}" download="과학킹덤_${esc(S.name)}_${name}.png" style="text-decoration:none">💾 사진 저장</a></div>`}catch(e){el.innerHTML='⚠️ 사진을 만들지 못했어요. 다른 브라우저(크롬)에서 다시 해 보세요.'}}
 
 /* 📢 패치 노트 */
-const VERSION='v7';const BUILD='1794829872';
+const VERSION='v8';const BUILD='1794832952';
 (async()=>{try{if(location.protocol!=='https:')return;const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='(\d+)'/);if(m&&m[1]!==BUILD){if(!started){const k='sk-reload-'+m[1];if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,1);location.replace(location.pathname+'?v='+m[1]);return}}const d=document.createElement('div');d.id='newVer';d.innerHTML='🆕 새 버전이 나왔어요! <button class="btn sm main" onclick="save();location.replace(location.pathname+\'?v='+m[1]+'\')">업데이트</button>';document.body.appendChild(d)}}catch(e){}})();
 const PATCH=[
+ {v:'v8',t:'🎓 영재와 문화',items:['🎓 <b>영재원</b>: 영재를 찾아 입학시키고, 그 분야 문제를 맞히거나 📖특별 수업으로 키워요','🎖️ 졸업한 영재는 <b>필살기를 골라 장수</b>가 되어요! 영재원 레벨이 높을수록 더 강하고, 🏋️특훈으로 능력치 최대 150까지 — <b>영재원 원툴</b>도 가능!','🌟 영재원 레벨이 높으면 <b>천재</b>가 나타나요 (능력 +15, 필살기 후보 5개)','🏛️ <b>내각 장관</b>(문화·재무·국방·과학기술·교육·외교부)이 되어 나라를 운영해요','🎭 <b>문화 업데이트</b>: 문화 점수를 모아 문화 레벨을 올리면 골드·민심·인구가 늘어요','🌍 <b>문화 흡수</b>: 문화가 높으면 이웃 땅이 전쟁 없이 스스로 합류해요!','🏛️ 새 건물: 영재원 · 과학 박물관 · 천체 투영관 · 과학 축제 광장 · 🎉과학 축제 개최','🏙️ <b>주거 발전</b>: 기술을 연구하면 🏘️빌라 → 🏢아파트 → 🏙️스카이 타워 → 🛰️우주 거주 돔! 주민이 많을수록 세금(골드)과 병력이 늘어요','🧪 <b>기술 강화</b>: 🚀우주 시대 기술 4개 추가 · 기술 하나마다 모든 생산 +2% · 기술이 앞서면 전투력 UP · 🔬과학 연구소가 연구점수를 자동으로 모아요']},
  {v:'v7',t:'🌍 세계로 나아가자!',items:['✈️ <b>공군</b>: 성 Lv5부터 공군 기지를 짓고 전투기를 만들어요! 공습·공격 지원·수도 방어, 그리고 해전 없이 바다를 건너는 🪂공수 작전','🎟️ <b>쿠폰 코드</b>: 📚더보기 › 🎟️쿠폰에서 코드를 입력하면 보상! 선생님은 선생님 모드에서 보상 쿠폰을 만들 수 있어요','💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지 강화</b>: 자동 클릭·같은 자리 연타·기계 같은 박자·숨은 버튼·다른 창 클릭 등을 감지해요. 의심되면 <b>사람 확인</b> 문제가 나오고, 틀리면 경고 → 두 번째엔 왕국 삭제!'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
  {v:'v6',t:'👩‍🏫 선생님 모드 업데이트',items:['직접 문제 출제 · 시험 모드','문항 분석 · 학생 상세 보기','결과 코드 위조 방지 · QR 입장','칠판 퀴즈쇼']},
  {v:'v5',t:'⚔️ 삼국지급 전쟁',items:['장수 성장·장비 · 책략 카드 · 공성전','주둔 부대 · 민심과 반란 · 계절','기술 트리 · 시나리오 · 업적 · 배경음악']}];
@@ -2639,6 +2649,7 @@ function myTitles(){const L=[['🌱 새싹 과학자','처음 왕국을 세우�
  if((S.best||0)>=10)L.push(['🔥 연속 정답왕','10연속 정답']);if((S.total||0)>=500)L.push(['📚 문제 박사','문제 500개 정답']);
  if(S.nations&&S.nations.filter(n=>n.fallen&&n.byMe).length>=3)L.push(['⚔️ 정복왕','나라 3곳 항복시키기']);
  if(WORLD.filter(w=>w.map!=='oce').some(w=>S.terr[w.id]==='me'))L.push(['⛵ 대항해가','다른 대륙 땅 차지']);
+ if((S.kids||[]).filter(k=>k.role==='gen').length>=3)L.push(['🎓 영재 사관학교장','영재 장수 3명 배출']);if((S.kids||[]).some(k=>k.gen))L.push(['🌟 천재 발굴가','천재 영재 발견']);
  return L}
 function curTitle(){if(S.title===null)return '';const L=myTitles().map(x=>x[0]);if(S.title&&L.includes(S.title))return S.title;const d=(S.titles||[]).slice(-1)[0];return d?'🎓 '+d:''}
 function setTitle(t){S.title=t;snd('click');save();renderTop();openProfile();if(t)toast(`👑 칭호를 「${t}」(으)로 바꿨어요!`)}
@@ -2810,6 +2821,125 @@ function airBody(){const mx=maxAir(),bl=sumLv('airbase');return `<div style="tex
  ${bl?`<p>1대당 ${costHtml(PLANE)}</p><div class="row">${[1,3,5].map(n=>`<button class="btn ${n===3?'main':''}" ${(S.air||0)+n<=mx&&canPay(scale(PLANE,n))?'':'disabled'} onclick="buildPlane(${n})">+${n}대</button>`).join('')}</div>${(S.air||0)>=mx?'<p style="color:#c0392b;font-size:14px">공군 기지를 업그레이드하거나 더 지으면 더 많이 만들 수 있어요</p>':''}`:`<p style="font:18px Jua;color:#c0392b;margin:10px 0">🔨 공군 기지를 먼저 지어야 해요! (성 Lv5부터 · 🏗️ 건설 › ⚔️ 군사)</p>`}
  <p style="font-size:13px;color:#8a7a9a">⚠️ 기술 Lv7(컴퓨터) 이상인 나라는 대공포가 있어서 공군 효과가 절반이에요. 전투에서 지면 전투기도 잃어요. 전투기는 수도 본대와 함께 싸워요.</p></div>`}
 function buildPlane(n){const c=scale(PLANE,n);if(!sumLv('airbase')||(S.air||0)+n>maxAir()||!canPay(c))return;pay(c);S.air=(S.air||0)+n;snd('build');toast(`✈️ 전투기 ${n}대 출격 준비 완료!`);renderTop();openArmy('air');save()}
+/* ===================== v8: 🎓 영재원 · 🏛️ 내각 · 🎭 문화 ===================== */
+const KNAME=['서준','하윤','도윤','서아','시우','지안','하준','아린','은우','지유','선우','채원','유준','소율','이안','윤슬','태오','다온','로운','하람','건우','예린','시아','주원','나윤','현우','보민','수아','민재','라희'];
+const KSUR=['김','이','박','최','정','강','조','윤','장','임','한','오','서','신','권','황','안','송'];
+const MIN={cul:{n:'문화부',ic:'🎭',st:'c',d:p=>`문화 +${(4+10*p).toFixed(1)}/분`},fin:{n:'재무부',ic:'💰',st:'i',d:p=>`골드 생산 +${Math.round(15*p)}%`},def:{n:'국방부',ic:'🛡️',st:'l',d:p=>`우리 군 전투력 +${Math.round(10*p)}%`},
+ sci:{n:'과학기술부',ic:'🔬',st:'i',d:p=>`정답마다 연구점수 추가 확률 ${Math.round(50*p)}%`},edu:{n:'교육부',ic:'📚',st:'c',d:p=>`문제 보상 +${Math.round(15*p)}%`},dip:{n:'외교부',ic:'🤝',st:'c',d:p=>`모든 나라와 관계 +${(1.5*p).toFixed(1)}/턴`}};
+const KXP=100;
+const kidById=id=>(S.kids||[]).find(k=>k.id===id);
+function minP(r){const id=S.mins&&S.mins[r];const k=id&&kidById(id);if(!k)return 0;return Math.min(1.2,(k[MIN[r].st]||50)/100)}
+function regKids(s){(s.kids||[]).forEach(k=>{if(k.role==='gen')regKidGen(k)})}
+function regKidGen(k){const key='kid_'+k.id;const SK=allSkills();const sk=k.sk&&SK[k.sk]?k.sk:Object.keys(SK)[0];GEN[key]={n:k.n,f:k.f,w:k.w,i:k.i,l:k.l,sk,skn:SK[sk].skn,skd:SK[sk].skd,kid:1,gen:k.gen?1:0};return key}
+const acadLv=()=>sumLv('academy');
+const recCostK=()=>80+40*S.k;
+function newKid(){const f=rnd(FK);const al=acadLv();const r=()=>50+Math.floor(Math.random()*26)+3*Math.max(0,al-1);const k={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),n:rnd(KSUR)+rnd(KNAME),f,w:r(),i:r(),l:r(),c:r(),xp:0,role:null};
+ k[rnd(['w','i','l','c'])]+=10;if(Math.random()<.04*al){k.gen=1;k.n='🌟'+k.n;['w','i','l','c'].forEach(s=>k[s]+=15)}k.star=Math.round((k.w+k.i+k.l+k.c-200)/25);return k}
+const kidStars=k=>'⭐'.repeat(Math.max(1,Math.min(5,Math.round((k.w+k.i+k.l+k.c-200)/22))));
+const training=()=>(S.kids||[]).filter(k=>k.xp<KXP);
+function kidXP(f,amt){const T=training();if(!T.length)return;let up=false;T.forEach(k=>{const before=k.xp;k.xp=Math.min(KXP,k.xp+((f==null||k.f===f)?amt:amt/4)*(1+.2*Math.max(0,acadLv()-1))*(k.gen?1.5:1));if(before<KXP&&k.xp>=KXP){up=true;kidGrow(k,8);news(`🎓 영재 ${jo(k.n,'이','가')} 졸업했어요! 영재원에서 임명해 주세요`)}})}
+function kidGrow(k,n){const st=['w','i','l','c'];for(let j=0;j<n;j++){const s=rnd(st);k[s]=Math.min(130,k[s]+1+(k.f==='phy'&&s==='w'||k.f==='chem'&&s==='i'||k.f==='bio'&&s==='c'||k.f==='earth'&&s==='l'?1:0))}}
+let KCAND=null,acTab='train';
+function openAcademy(tab){if(examGuard())return;if(tab)acTab=tab;snd('click');S.kids=S.kids||[];S.mins=S.mins||{};const lv=acadLv();
+ const tabs=`<div class="chips" style="margin:2px 40px 10px 0">${[['train',`📚 양성 ${training().length}/${lv}`],['grad',`🎓 졸업생 ${S.kids.filter(k=>k.xp>=KXP&&!k.role).length}`],['gens',`🎖️ 영재 장수 ${kidGens().length}`],['cab','🏛️ 내각'],['all',`👥 인재 ${S.kids.length}`]].map(([k,n])=>`<button class="chip ${acTab===k?'on':''}" onclick="openAcademy('${k}')">${n}</button>`).join('')}</div>`;let body='';
+ if(!lv)body=`<div style="text-align:center"><div style="width:120px;height:110px;margin:0 auto">${svg(ART.academy())}</div><p style="font:18px Jua;color:#c0392b;margin:10px 0">🔨 영재원을 먼저 지어야 해요! (성 Lv3부터 · 🏗️ 건설 › 🏠 생활)</p><p style="font-size:14px">영재원에서 어린 과학 영재를 키워 <b>장수</b>나 <b>장관</b>으로 임명할 수 있어요.</p></div>`;
+ else if(acTab==='train'){const T=training();
+  body=`<p style="font-size:14px">영재는 시간이 지나면 조금씩 자라고, <b>그 영재의 분야 문제를 맞히면</b> 쑥쑥 자라요! 📖 특별 수업으로 직접 가르칠 수도 있어요. (영재원 레벨 = 동시에 키울 수 있는 수)</p>
+  <div class="klist">${T.map(k=>kidCard(k,`<div class="bar" style="height:10px;margin:4px 0"><i style="width:${k.xp/KXP*100}%;background:${FIELDS[k.f].c}"></i></div><small>성장 ${Math.floor(k.xp)}/${KXP}</small><div class="row" style="justify-content:flex-start;margin-top:4px"><button class="btn sm main" onclick="kidLesson('${k.id}')">📖 특별 수업</button></div>`)).join('')||'<p style="text-align:center">지금 키우는 영재가 없어요.</p>'}</div>
+  ${T.length<lv?(KCAND?`<h3 style="margin-top:8px">🔍 영재 후보 (한 명을 골라요)</h3><div class="klist">${KCAND.map((k,j)=>kidCard(k,`<button class="btn sm green" onclick="pickKid(${j})">🎓 입학시키기</button>`)).join('')}</div>`:`<div class="row"><button class="btn main" ${S.res.gold<recCostK()?'disabled':''} onclick="findKids()">🔍 영재 찾기 💰${recCostK()}</button></div>`):'<p style="text-align:center;font-size:13px;color:#8a7a9a">자리가 꽉 찼어요. 영재원을 업그레이드하면 더 키울 수 있어요.</p>'}`}
+ else if(acTab==='grad'){const G=S.kids.filter(k=>k.xp>=KXP&&!k.role);
+  body=`<p style="font-size:14px">졸업한 영재를 <b>🎖️ 장수</b>(전투에 나가요)나 <b>🏛️ 장관</b>(나라를 운영해요)으로 임명해요.</p><div class="klist">${G.map(k=>kidCard(k,`<div class="row" style="justify-content:flex-start;gap:4px;margin-top:4px"><button class="btn sm main" onclick="kidGeneral('${k.id}')">🎖️ 장수로</button>${Object.entries(MIN).map(([r,M])=>`<button class="btn sm" onclick="appoint('${k.id}','${r}')" title="${M.d(Math.min(1.2,(k[M.st]||50)/100))}">${M.ic}${M.n}</button>`).join('')}</div>`)).join('')||'<p style="text-align:center">아직 졸업생이 없어요. 영재를 키워 보세요!</p>'}</div>`}
+ else if(acTab==='gens')body=kidGensBody();
+ else if(acTab==='cab'){body=`<p style="font-size:14px">장관의 능력치가 높을수록 효과가 커요. 장관을 바꾸면 이전 장관은 졸업생 목록으로 돌아가요.</p><div class="klist">${Object.entries(MIN).map(([r,M])=>{const k=S.mins[r]&&kidById(S.mins[r]);const cand=S.kids.filter(x=>x.xp>=KXP&&!x.role);
+  return `<div class="kcard"><div class="kic">${M.ic}</div><div style="flex:1"><b class="j">${M.n} 장관</b> <small>(${{w:'무력',i:'지력',l:'통솔',c:'문화'}[M.st]} 중요)</small><br>${k?`<b>${k.n}</b> ${FIELDS[k.f].ic} · ${{w:'무',i:'지',l:'통',c:'문'}[M.st]}${k[M.st]} · <span style="color:#7b5cd6">✨ ${M.d(minP(r))}</span>`:'<span style="color:#a99bb8">비어 있어요</span>'}
+   <div class="row" style="justify-content:flex-start;gap:4px;margin-top:4px">${k?`<button class="btn sm" onclick="dismiss('${r}')">해임</button>`:''}${cand.map(c=>`<button class="btn sm green" onclick="appoint('${c.id}','${r}')">${c.n} 임명</button>`).join('')}</div></div></div>`}).join('')}</div>`}
+ else{body=`<div class="klist">${S.kids.map(k=>kidCard(k,`<small>${k.xp<KXP?'📚 양성 중':k.role==='gen'?'🎖️ 장수':k.role?MIN[k.role].ic+' '+MIN[k.role].n+' 장관':'🎓 졸업 (임명 대기)'}</small>`)).join('')||'<p style="text-align:center">아직 인재가 없어요.</p>'}</div>`}
+ openM(`<h2>🎓 영재원</h2>${tabs}${body}<div class="row"><button class="btn" onclick="closeM()">닫기</button></div>`,'academy')}
+function kidCard(k,extra){return `<div class="kcard"><div class="kic" style="background:${FIELDS[k.f].c}">${{phy:'🧑‍🔬',chem:'👩‍🔬',bio:'🧑‍🌾',earth:'🧑‍🚀'}[k.f]}</div><div style="flex:1"><b class="j">${k.n}</b> <span class="cost" style="background:${FIELDS[k.f].c}">${FIELDS[k.f].ic}${FIELDS[k.f].n}</span> ${kidStars(k)}<div class="st" style="font-size:13px">무력 ${k.w} · 지력 ${k.i} · 통솔 ${k.l} · 문화 ${k.c}</div>${extra}</div></div>`}
+function findKids(){if(S.res.gold<recCostK())return;S.res.gold-=recCostK();KCAND=Array.from({length:3+(acadLv()>=3?1:0)+(acadLv()>=5?1:0)},newKid);snd('coin');renderTop();openAcademy('train');save()}
+function pickKid(j){if(!KCAND||training().length>=acadLv())return;const k=KCAND[j];KCAND=null;S.kids.push(k);snd('lv');toast(`🎓 ${jo(k.n,'이','가')} 영재원에 입학했어요!`);openAcademy('train');save()}
+let KL=null;
+function kidLesson(id){const k=kidById(id);if(!k)return;KL={id,q:pickQ(k.f),done:false};drawKL()}
+function drawKL(){const k=kidById(KL.id),q=KL.q,F=FIELDS[q.f];openM(`<h2>📖 ${k.n}의 특별 수업</h2><p style="font-size:14px">${k.n}: "${rnd(['선생님, 이거 알려 주세요!','궁금해요!','저도 풀어 볼래요!'])}" · 맞히면 성장 +25</p><div class="qcard"><span class="qtag" style="background:${F.c}">${F.ic} ${F.n}</span><div class="qtext">${q.disp||q.q}</div></div><div id="opts" class="${q.type==='ox'?'ox':''}">${q.opts.map((o,i)=>`<button class="opt" onclick="klAns(${i},event)"><b>${i+1}</b><span>${o}</span></button>`).join('')}</div><div id="qres"></div>`,'kl');markShown()}
+function klAns(i,ev){if(!KL||KL.done||i>=KL.q.opts.length)return;const q=KL.q,ok=q.opts[i]===q.a;if(macroCheck(ok,ev))return;KL.done=true;const k=kidById(KL.id);S.tries++;
+ [...document.querySelectorAll('#opts .opt')].forEach((b,j)=>{b.disabled=true;if(q.opts[j]===q.a)b.classList.add('ok');else if(j===i)b.classList.add('no')});
+ if(ok){S.total++;S.stats[q.f].c++;gainCorrect(q);snd('ok')}else{S.stats[q.f].w++;S.wrong.unshift(wrongRec(q,i));S.wrong=S.wrong.slice(0,40);snd('no')}
+ const before=k.xp;if(k.xp<KXP){k.xp=Math.min(KXP,k.xp+(ok?25:5));if(ok)kidGrow(k,2)}const grad=before<KXP&&k.xp>=KXP;if(grad){kidGrow(k,8);snd('lv');confetti();news(`🎓 영재 ${jo(k.n,'이','가')} 졸업했어요!`)}
+ $('#qres').innerHTML=`<div class="res ${ok?'ok':'no'}"><p>${ok?`⭕ 정답! ${k.n} 성장 +25`:`❌ 아쉬워요 — 정답: <b>${q.a}</b> (성장 +5)`}</p><p style="font-size:14px">💡 ${q.ex}</p>${grad?`<p class="j" style="font-size:20px">🎓 ${jo(k.n,'이','가')} 졸업했어요!</p>`:''}</div><div class="row">${k.xp<KXP?`<button class="btn main" onclick="kidLesson('${k.id}')">한 문제 더 ▶</button>`:''}<button class="btn" onclick="KL=null;openAcademy('${grad?'grad':'train'}')">영재원으로</button></div>`;renderTop();save()}
+function kidGeneral(id,skc){const k=kidById(id);if(!k||k.role)return;if(skc==null)return skillPick(k);k.sk=skc;k.role='gen';const key=regKidGen(k);S.gens.push(key);gx(key);snd('lv');confetti();news(`🎖️ 영재 출신 ${jo(k.n,'이','가')} 장수가 됐어요!`);openAcademy('grad');save()}
+function appoint(id,r){const k=kidById(id);if(!k||k.role&&k.role!==r)return;if(S.mins[r]&&S.mins[r]!==id){const old=kidById(S.mins[r]);if(old)old.role=null}S.mins[r]=id;k.role=r;snd('lv');toast(`${MIN[r].ic} ${jo(k.n,'이','가')} ${MIN[r].n} 장관이 됐어요!`);renderTop();openAcademy('cab');save()}
+function dismiss(r){const k=kidById(S.mins[r]);if(k)k.role=null;delete S.mins[r];snd('click');openAcademy('cab');save()}
+
+
+/* 🎖️ 영재 장수 강화 */
+let _SK=null;function allSkills(){if(_SK)return _SK;_SK={};Object.values(GEN).forEach(G=>{if(G.sk&&!G.kid&&!_SK[G.sk])_SK[G.sk]={skn:G.skn,skd:G.skd}});return _SK}
+function skillPick(k){const SK=allSkills();const n=k.gen?5:3;const opts=shuffle(Object.keys(SK)).slice(0,n);snd('click');
+ openM(`<h2>🎖️ ${k.n}의 필살기 고르기</h2><p style="font-size:14px">장수가 될 ${k.n}에게 가르칠 <b>필살기</b>를 하나 골라요. ${k.gen?'🌟 천재라서 후보가 5개예요!':''}</p><div class="klist">${opts.map(s=>`<div class="kcard" style="cursor:pointer" onclick="kidGeneral('${k.id}','${s}')"><div class="kic">✨</div><div style="flex:1"><b class="j">${SK[s].skn}</b><br><small>${SK[s].skd}</small></div></div>`).join('')}</div><div class="row"><button class="btn" onclick="openAcademy('grad')">취소</button></div>`,'skpick')}
+const kidGens=()=>(S.kids||[]).filter(k=>k.role==='gen');
+const KCAP=150;
+let KT=null;
+function kidTrain(id,st){const k=kidById(id);if(!k||k.role!=='gen')return;if(k[st]>=KCAP)return toast('이 능력치는 최고예요!');KT={id,st,q:pickQ(k.f),done:false};drawKT()}
+function drawKT(){const k=kidById(KT.id),q=KT.q,F=FIELDS[q.f];const nm={w:'무력',i:'지력',l:'통솔'}[KT.st];
+ openM(`<h2>🏋️ ${k.n} 장수 특훈 · ${nm}</h2><p style="font-size:14px">맞히면 ${nm} +2 (최대 ${KCAP}) · 지금 ${k[KT.st]}</p><div class="qcard"><span class="qtag" style="background:${F.c}">${F.ic} ${F.n}</span><div class="qtext">${q.disp||q.q}</div></div><div id="opts" class="${q.type==='ox'?'ox':''}">${q.opts.map((o,i)=>`<button class="opt" onclick="ktAns(${i},event)"><b>${i+1}</b><span>${o}</span></button>`).join('')}</div><div id="qres"></div>`,'kt');markShown()}
+function ktAns(i,ev){if(!KT||KT.done||i>=KT.q.opts.length)return;const q=KT.q,ok=q.opts[i]===q.a;if(macroCheck(ok,ev))return;KT.done=true;const k=kidById(KT.id);S.tries++;
+ [...document.querySelectorAll('#opts .opt')].forEach((b,j)=>{b.disabled=true;if(q.opts[j]===q.a)b.classList.add('ok');else if(j===i)b.classList.add('no')});
+ if(ok){S.total++;S.stats[q.f].c++;gainCorrect(q);snd('ok');k[KT.st]=Math.min(KCAP,k[KT.st]+2);regKidGen(k)}else{S.stats[q.f].w++;S.wrong.unshift(wrongRec(q,i));S.wrong=S.wrong.slice(0,40);snd('no')}
+ $('#qres').innerHTML=`<div class="res ${ok?'ok':'no'}"><p>${ok?`💪 정답! ${k.n}의 ${{w:'무력',i:'지력',l:'통솔'}[KT.st]} ${k[KT.st]}`:`❌ 아쉬워요 — 정답: <b>${q.a}</b>`}</p><p style="font-size:14px">💡 ${q.ex}</p></div><div class="row"><button class="btn main" onclick="kidTrain('${k.id}','${KT.st}')">한 번 더 ▶</button><button class="btn" onclick="KT=null;openAcademy('gens')">영재원으로</button></div>`;renderTop();save()}
+function kidGensBody(){const G=kidGens();return `<p style="font-size:14px">영재 출신 장수는 <b>영재원 레벨당 모든 능력 +2</b>(🌟천재는 +8 더)를 받아요. 문제를 풀어 <b>특훈</b>하면 능력치를 최대 ${KCAP}까지 올릴 수 있어요!</p>
+ <div class="klist">${G.map(k=>{const key='kid_'+k.id;const s=gStat(key);return `<div class="kcard"><div style="width:52px;flex:none">${genSvg(key)}</div><div style="flex:1"><b class="j">${k.n}</b> <span class="cost" style="background:${FIELDS[k.f].c}">${FIELDS[k.f].ic}</span> Lv${s.lv}<div class="st" style="font-size:13px">무력 ${s.w} · 지력 ${s.i} · 통솔 ${s.l} · ✨${GEN[key].skn}</div><div class="row" style="justify-content:flex-start;gap:4px;margin-top:4px">${['w','i','l'].map(st=>`<button class="btn sm" ${k[st]>=KCAP?'disabled':''} onclick="kidTrain('${k.id}','${st}')">🏋️ ${{w:'무력',i:'지력',l:'통솔'}[st]} 특훈</button>`).join('')}<button class="btn sm main" onclick="S.lead='${key}';save();toast('🎖️ ${k.n}을(를) 대장으로 정했어요');openAcademy('gens')">${S.lead===key?'✅ 대장':'대장으로'}</button></div></div></div>`}).join('')||'<p style="text-align:center">아직 영재 장수가 없어요. 졸업생을 🎖️장수로 임명해 보세요!</p>'}</div>`}
+
+/* 🎭 문화 */
+const CULT_T=[0,100,300,700,1400,2500,4000,6000,9000,13000,20000];
+const CULT_N=['','작은 동네 문화','꽃피는 문화','과학 예술의 고장','문화 도시','문화 강국','과학 르네상스','문화의 중심','세계 문화 수도','전설의 문명','영원한 문명'];
+const cultLv=()=>{const c=S.cul||0;let l=0;while(l<CULT_T.length-1&&c>=CULT_T[l+1])l++;return l};
+function cultRate(){let r=.5+3*sumLv('museum')+5*sumLv('planet')+8*sumLv('fest')+happy()*.3;if(minP('cul'))r+=4+10*minP('cul');return r}
+function cultTick(dt){const before=cultLv();S.cul=(S.cul||0)+cultRate()*dt/60;const after=cultLv();if(after>before){snd('lv');confetti();news(`🎭 문화 Lv${after} 「${CULT_N[after]}」 달성! 골드 +${after*3}% · 민심·인구 증가`)}}
+function cultureTurn(){const cl=cultLv();const dp=minP('dip');if(dp)S.nations.forEach(N=>{if(!N.fallen&&!N.war)N.rel=Math.min(100,N.rel+1.5*dp)});
+ if(cl<2)return;getReg();const mine=new Set(['me']);const cands=[];
+ WORLD.forEach(w=>{const o=S.terr[w.id];if(o==='me'||!adjTo(w.id,'me'))return;if(o==null)cands.push([w,cl*.015]);else if(cl>=4&&w.cap==null&&!S.nations[o].war&&!S.nations[o].ally)cands.push([w,cl*.004])});
+ if(cands.length){const[w,ch]=rnd(cands);if(Math.random()<ch*.7){const o=S.terr[w.id];S.terr[w.id]='me';S.loy[w.id]=70;if(o!=null){S.nations[o].rel=Math.max(-100,S.nations[o].rel-10);checkFall(o,'me')}snd('cheer');news(`🎭 ${jo(w.n,'이','가')} 우리 문화에 반해서 스스로 합류했어요!`)}}}
+const festCost=()=>100*S.k;
+function holdFest(){S.festCD=S.festCD||0;if(S.play<S.festCD||S.res.gold<festCost())return;S.res.gold-=festCost();S.festCD=S.play+600;S.cul=(S.cul||0)+50*S.k;myTerr().forEach(w=>S.loy[w.id]=Math.min(100,(S.loy[w.id]??60)+15));S.morale=Math.min(100,S.morale+10);snd('cheer');confetti();news(`🎉 과학 축제를 열었어요! 문화 +${50*S.k} · 모든 땅 민심 +15 · 사기 +10`);renderTop();openCulture();save()}
+function openCulture(){if(examGuard())return;snd('click');const cl=cultLv(),c=S.cul||0,nx=CULT_T[cl+1];const cd=Math.max(0,(S.festCD||0)-S.play);
+ openM(`<h2>🎭 문화</h2><div class="prof" style="background:linear-gradient(90deg,#ffe3f1,#fff8e6)"><div style="font-size:54px">🎭</div><div style="flex:1"><b class="j" style="font-size:22px">문화 Lv${cl} ${CULT_N[cl]||'문화 없음'}</b><div class="bar" style="height:12px;margin:4px 0"><i style="width:${nx?Math.min(100,(c-CULT_T[cl])/(nx-CULT_T[cl])*100):100}%;background:#ff8fc8"></i></div><small>🎨 문화 ${fmt(Math.floor(c))}${nx?' / '+fmt(nx):''} · +${cultRate().toFixed(1)}/분</small></div></div>
+ <div class="req"><span class="rw">💰 골드 +${cl*3}%</span><span class="rw">❤️ 민심 회복 +${(cl*.15).toFixed(2)}/분</span><span class="rw">👥 인구 +${cl}</span>${cl>=2?`<span class="rw">🌍 문화 흡수 ~${(cl*1).toFixed(0)}%/턴</span>`:''}</div>
+ <p style="font-size:14px">🌍 <b>문화 흡수</b>: 문화 Lv2부터 우리 땅 옆 주인 없는 땅이, Lv4부터는 평화로운 나라의 땅까지 <b>전쟁 없이 스스로 합류</b>할 수 있어요!</p>
+ <h3>🎨 문화를 올리는 법</h3><ul style="font-size:14px;margin-left:18px;line-height:1.7"><li>🏛️ 과학 박물관(+3/분) · 🌌 천체 투영관(+5/분) · 🎪 과학 축제 광장(+8/분) — 🏗️ 건설 › 🌸 장식</li><li>🌸 장식 건물의 행복도 (행복 1당 +0.3/분)</li><li>🎭 문화부 장관 임명 (🎓 영재원 › 🏛️ 내각)</li><li>🎉 과학 축제 개최</li></ul>
+ <div class="row"><button class="btn main" ${cd>0||S.res.gold<festCost()?'disabled':''} onclick="holdFest()">🎉 과학 축제 ${cd>0?`⏳${Math.ceil(cd/60)}분`:`💰${festCost()}`}</button><button class="btn" onclick="openAcademy('cab')">🏛️ 내각</button><button class="btn" onclick="closeM()">닫기</button></div>`,'culture')}
+Object.assign(BD,{
+ academy:{n:'영재원',k:2,cat:'life',cost:ALLR(200,80),prod:{},fx:'🎓 동시에 키울 영재 +1 · 성장 속도 +20% · 후보 능력치 +3 · 천재 확률 +4% · 영재 장수 전 능력 +2 (레벨당)',d:'과학 영재들이 꿈을 키우는 특별한 학교예요.'},
+ museum:{n:'과학 박물관',k:3,cat:'deco',cost:{gold:150,mineral:60,element:40},prod:{},hap:1,fx:'🎨 문화 +3/분 · 😊 행복 +1 (레벨당)',d:'공룡 화석과 옛 발명품이 전시된 박물관이에요.'},
+ planet:{n:'천체 투영관',k:4,cat:'deco',cost:{gold:250,energy:100,mineral:60},prod:{},hap:1,fx:'🎨 문화 +5/분 · 😊 행복 +1 (레벨당)',d:'둥근 천장에 별과 은하를 비춰 줘요.'},
+ fest:{n:'과학 축제 광장',k:5,cat:'deco',cost:{gold:400,energy:120,life:120},prod:{},hap:2,fx:'🎨 문화 +8/분 · 😊 행복 +2 (레벨당)',d:'과학 마술쇼와 로봇 퍼레이드가 열리는 광장!'}});
+Object.assign(ART,{
+ academy:()=>`${sh}<rect x="16" y="40" width="68" height="46" rx="4" fill="#d4c2ff" ${st}/><path d="M10 42 L50 16 L90 42 Z" fill="#7b5cd6" ${st}/><rect x="42" y="60" width="16" height="26" rx="3" fill="#fff" ${st}/><rect x="22" y="50" width="12" height="12" rx="2" fill="#bde9ff" ${st}/><rect x="66" y="50" width="12" height="12" rx="2" fill="#bde9ff" ${st}/><g class="bob"><path d="M38 10 L50 4 L62 10 L50 16 Z" fill="#333" ${st}/><path d="M60 10 v8" stroke="#ffd84d" stroke-width="3"/></g>${star(20,24,.6)}${star(82,24,.5)}${face(50,50,.45)}`,
+ museum:()=>`${sh}<rect x="12" y="48" width="76" height="38" rx="2" fill="#f1ece0" ${st}/><path d="M8 48 L50 22 L92 48 Z" fill="#e0d6c0" ${st}/>${[22,38,54,70].map(x=>`<rect x="${x}" y="52" width="8" height="30" fill="#fff" ${st}/>`).join('')}<rect x="10" y="84" width="80" height="6" fill="#c8bfa8" ${st}/><g class="bob"><path d="M44 34 q6 -10 12 0" stroke="${O}" stroke-width="3" fill="#9ff0c9"/></g>${face(50,40,.4)}`,
+ planet:()=>`${sh}<rect x="18" y="56" width="64" height="30" rx="4" fill="#c6d4e8" ${st}/><path d="M18 58 Q18 18 50 18 Q82 18 82 58 Z" fill="#3b3f8f" ${st}/>${star(36,36,.6,'#fff')}${star(58,30,.5,'#ffe066')}${star(66,46,.45,'#fff')}<circle cx="44" cy="46" r="4" fill="#ffb3c6"/><rect x="44" y="66" width="12" height="20" rx="2" fill="#fff" ${st}/>${face(50,72,.35)}`,
+ fest:()=>`${sh}<ellipse cx="50" cy="80" rx="40" ry="10" fill="#ffe3a8" ${st}/><path d="M20 76 L50 22 L80 76 Z" fill="#ff8fab" ${st}/><path d="M35 76 L50 22 L65 76" fill="#fff" opacity=".8"/><path class="flag" d="M50 22 L50 8 L64 12 L50 16" fill="#ffd84d" stroke="${O}" stroke-width="2"/>${[[16,40,'#7ec8ff'],[84,36,'#c3a6ff'],[24,24,'#ffd84d']].map(([x,y,c])=>`<g class="bob"><circle cx="${x}" cy="${y}" r="7" fill="${c}" ${st}/><line x1="${x}" y1="${y+7}" x2="${x}" y2="${y+20}" stroke="${O}" stroke-width="1.5"/></g>`).join('')}${face(50,62,.45)}`});
+
+
+/* ===================== v8: 🏙️ 주거 · 🧪 기술 강화 ===================== */
+Object.assign(BD,{
+ villa:{n:'빌라',k:2,cat:'life',tech:'brick',cost:{gold:120,mineral:50,life:30},prod:{gold:8},fx:'👥 주민 +12 (레벨당)',d:'벽돌로 지은 아담한 3층 빌라예요.'},
+ apt:{n:'아파트',k:3,cat:'life',tech:'concrete',cost:{gold:300,mineral:150,energy:80},prod:{gold:15},fx:'👥 주민 +25 (레벨당)',d:'철근 콘크리트로 높이 쌓은 아파트 단지!'},
+ tower:{n:'스카이 타워',k:5,cat:'life',tech:'sky',cost:{gold:800,mineral:300,energy:250,element:150},prod:{gold:35},fx:'👥 주민 +50 (레벨당)',d:'구름까지 닿는 초고층 빌딩이에요.'},
+ dome:{n:'우주 거주 돔',k:8,cat:'life',tech:'arco',cost:{gold:2000,energy:700,element:500,mineral:500,life:400},prod:{gold:80},fx:'👥 주민 +100 (레벨당)',d:'유리 돔 안에 숲과 도시가 있는 미래 도시!'},
+ lab:{n:'과학 연구소',k:2,cat:'prod',cost:ALLR(140,50),prod:{},fx:'🧪 연구점수 자동 +0.67/분 (레벨당)',d:'연구원들이 밤낮으로 실험해 기술을 개발해요.'}});
+Object.assign(ART,{
+ villa:()=>`${sh}<rect x="22" y="30" width="56" height="56" rx="3" fill="#e8a07a" ${st}/><path d="M18 32 L50 14 L82 32 Z" fill="#a8574a" ${st}/>${[38,54,70].map(y=>[30,46,62].map(x=>`<rect x="${x}" y="${y}" width="9" height="9" rx="1.5" fill="#bde9ff" stroke="${O}" stroke-width="2"/>`).join('')).join('')}<rect x="44" y="76" width="12" height="10" fill="#7a4a2a" ${st}/>${face(50,26,.35)}`,
+ apt:()=>`${sh}<rect x="14" y="20" width="34" height="66" rx="3" fill="#dfe6f2" ${st}/><rect x="52" y="34" width="34" height="52" rx="3" fill="#c6d4e8" ${st}/>${[26,38,50,62,74].map(y=>`<rect x="20" y="${y}" width="8" height="7" fill="#ffe066" stroke="${O}" stroke-width="1.5"/><rect x="34" y="${y}" width="8" height="7" fill="#bde9ff" stroke="${O}" stroke-width="1.5"/>`).join('')}${[40,52,64,76].map(y=>`<rect x="58" y="${y}" width="8" height="7" fill="#bde9ff" stroke="${O}" stroke-width="1.5"/><rect x="72" y="${y}" width="8" height="7" fill="#ffe066" stroke="${O}" stroke-width="1.5"/>`).join('')}<text x="31" y="18" font-size="9" text-anchor="middle" fill="${O}">101</text>${face(69,30,.35)}`,
+ tower:()=>`${sh}<path d="M38 88 L42 10 L58 10 L62 88 Z" fill="#9ad7ff" ${st}/><path d="M50 10 L50 0" stroke="${O}" stroke-width="3"/><circle class="pulse" cx="50" cy="2" r="3" fill="#ff6b6b"/>${[20,32,44,56,68,80].map(y=>`<line x1="${42.5}" y1="${y}" x2="${57.5}" y2="${y}" stroke="#fff" stroke-width="2"/>`).join('')}<rect x="20" y="56" width="16" height="32" rx="2" fill="#dfe6f2" ${st}/><rect x="64" y="48" width="16" height="40" rx="2" fill="#c6d4e8" ${st}/>${face(50,40,.35)}`,
+ dome:()=>`${sh}<ellipse cx="50" cy="84" rx="42" ry="6" fill="#9aa5b8" ${st}/><path d="M10 84 Q10 22 50 22 Q90 22 90 84 Z" fill="#bde9ff" opacity=".75" ${st}/><path d="M30 84 L30 60 L38 60 L38 84 M56 84 L56 48 L66 48 L66 84" fill="#dfe6f2" stroke="${O}" stroke-width="2"/><circle cx="44" cy="70" r="7" fill="#5fc75e" ${st}/><circle cx="76" cy="72" r="6" fill="#5fc75e" ${st}/><path d="M24 40 Q50 28 76 40" stroke="#fff" stroke-width="3" fill="none" opacity=".8"/>${star(84,16,.6)}${face(50,44,.4)}`,
+ lab:()=>`${sh}<rect x="16" y="40" width="68" height="46" rx="4" fill="#e6f7ff" ${st}/><path d="M12 42 h76 v-8 h-76z" fill="#4dabf7" ${st}/><rect x="24" y="52" width="16" height="14" rx="2" fill="#bde9ff" ${st}/><rect x="60" y="52" width="16" height="14" rx="2" fill="#bde9ff" ${st}/><g class="bob"><path d="M46 14 h8 v10 l8 14 h-24 l8 -14z" fill="#9ff0c9" ${st}/></g><circle cx="48" cy="34" r="2" fill="#fff"/>${face(50,74,.4)}`});
+let _tcache=null;
+const TALL=()=>Object.keys(TECH).length;
+function techBonus(){return (S.tech||[]).length*.02*(hasT('quantum')?2:1)}
+const myTL=()=>Math.round((S.tech||[]).length*12/TALL());
+function techAdv(ni){if(ni==null||ni==='me'||!S.ntech)return 1;const gap=Math.max(-5,Math.min(5,myTL()-((S.ntech[ni])||0)));return 1+.05*gap}
+function canResearch(){if(!S||!S.tech)return false;return Object.entries(TECH).some(([k,t])=>!hasT(k)&&S.k>=ERA_K[t.era]&&(t.req||[]).every(hasT)&&(S.rp||0)>=t.cost)}
+function techSummary(){const tl=myTL();const ai=(S.ntech||[]).map((v,i)=>[v||0,i]).filter(([,i])=>S.nations[i]&&!S.nations[i].fallen).sort((a,b)=>b[0]-a[0]);const top=ai[0];
+ return `<div class="req"><span class="rw">🧪 기술 ${S.tech.length}/${TALL()}개</span><span class="rw">📈 모든 생산 +${Math.round(techBonus()*100)}%</span><span class="rw">⚔️ 기술 레벨 ${tl}</span>${top?`<span class="rw" style="background:${top[0]>tl?'#ffd6d6':'#d6f5d6'}">${NAT[top[1]].ic} 1위 나라 Lv${top[0]} ${top[0]>tl?'— 뒤처졌어요!':'— 우리가 앞서요!'}</span>`:''}</div>
+ <p style="font-size:13px;color:#8a7a9a">💡 기술 하나마다 <b>모든 생산 +2%</b>. 상대 나라보다 기술 레벨이 높으면 전투력이 레벨 차이당 +5% (낮으면 -5%)! 🏘️빌라 → 🏢아파트 → 🏙️스카이 타워 → 🛰️우주 돔으로 주민을 늘려요.</p>`}
 /* ---------- loop ---------- */
 let lastT=Date.now(),floatT=0,saveT=0,vilT=0;
 setInterval(()=>{const now=Date.now();const dt=Math.min(5,(now-lastT)/1000);lastT=now;if(!started||!S)return;
