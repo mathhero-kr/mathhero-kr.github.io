@@ -25,12 +25,12 @@ button{font-family:inherit;color:var(--o)}
 .sp{flex:1}
 .ibtn{width:42px;height:42px;border:3px solid var(--o);border-radius:14px;background:#fff;box-shadow:0 3px 0 var(--o);font-size:20px;cursor:pointer}
 /* quest */
-#quest{position:fixed;left:8px;top:72px;z-index:19;background:#fffaf0;border:3px solid var(--o);border-radius:16px;box-shadow:0 4px 0 var(--o);padding:8px 12px;max-width:230px;font-size:14px}
+#quest{position:fixed;left:8px;top:calc(var(--topH,64px) + 8px);z-index:19;background:#fffaf0;border:3px solid var(--o);border-radius:16px;box-shadow:0 4px 0 var(--o);padding:8px 12px;max-width:230px;font-size:14px}
 #quest h3{font-size:15px;margin-bottom:2px}
 #quest .qb{margin-top:6px;font-family:Jua;font-size:15px;border:2.5px solid var(--o);border-radius:12px;background:#ffcf3f;padding:4px 10px;cursor:pointer;animation:bnc 1s infinite;box-shadow:0 3px 0 var(--o)}
 #quest.min{max-width:44px;padding:4px 8px;cursor:pointer}#quest.min>*:not(h3){display:none}
 @keyframes bnc{50%{transform:translateY(-3px)}}
-#crisis{position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:19;background:#ffe0e0;border:3px solid #c0392b;border-radius:16px;box-shadow:0 4px 0 #c0392b;padding:6px 14px;font-family:Jua;font-size:16px;color:#8b1e1e;display:none;text-align:center;animation:shk 2s infinite}
+#crisis{position:fixed;top:calc(var(--topH,64px) + 8px);left:50%;transform:translateX(-50%);z-index:19;background:#ffe0e0;border:3px solid #c0392b;border-radius:16px;box-shadow:0 4px 0 #c0392b;padding:6px 14px;font-family:Jua;font-size:16px;color:#8b1e1e;display:none;text-align:center;animation:shk 2s infinite}
 @keyframes shk{0%,90%,100%{transform:translateX(-50%)}93%{transform:translateX(calc(-50% - 4px))}96%{transform:translateX(calc(-50% + 4px))}}
 /* map */
 #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding-top:40px}
@@ -220,9 +220,9 @@ button{font-family:inherit;color:var(--o)}
 .ptitle{display:block;width:fit-content;background:linear-gradient(90deg,#ffe066,#ffb3c6);border:2.5px solid var(--o);border-radius:99px;padding:1px 12px;font-family:Jua;font-size:16px;margin:2px 0}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:300px;overflow:auto;padding:2px}
 .tch{background:#fff;border:2.5px solid var(--o);border-radius:12px;padding:6px 8px;text-align:left;cursor:pointer;font-family:'Gowun Dodum';color:var(--o)}.tch b{font-family:Jua;font-weight:400;font-size:15px;display:block}.tch small{font-size:11px;color:#8a7a9a}.tch.on{background:#ffe066;box-shadow:0 3px 0 var(--o)}.tch:hover{transform:translateY(-1px)}
-#cityBar{position:fixed;left:50%;transform:translateX(-50%);top:66px;z-index:30;display:none;gap:8px;align-items:center;background:#fffaf0;border:3px solid var(--o);border-radius:99px;padding:4px 6px 4px 14px;box-shadow:0 4px 0 var(--o);font-family:Jua;white-space:nowrap}#cityBar b{font-weight:400;font-size:16px}#cityBar small{font-size:12px;color:#8a7a9a}
+#cityBar{position:fixed;left:10px;bottom:96px;z-index:30;display:none;gap:8px;align-items:center;background:#fffaf0;border:3px solid var(--o);border-radius:99px;padding:4px 6px 4px 14px;box-shadow:0 4px 0 var(--o);font-family:Jua;white-space:nowrap}#cityBar b{font-weight:400;font-size:16px}#cityBar small{font-size:12px;color:#8a7a9a}
 .wpol{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;font-size:13px}.wpol>div{background:#f7f3ff;border:2px solid var(--o);border-radius:12px;padding:6px 8px}.wpol>div>b{font-family:Jua;font-weight:400;font-size:15px;display:block;margin-bottom:2px}.wpol .dim{color:#a99bb8}
-@media (max-width:640px){#cityBar{top:auto;bottom:86px}}
+@media (max-width:1100px){#cityBar small{display:none}}@media (max-width:640px){#cityBar{bottom:84px;left:6px;font-size:13px}#cityBar b{font-size:13px}}
 #grid .plot.mv{outline:4px dashed #4dabf7;outline-offset:-4px;opacity:.6}#grid .plot.drop{box-shadow:inset 0 0 0 4px #ffd84d}#grid .plot.over{box-shadow:inset 0 0 0 6px #2b8a3e;transform:scale(1.05)}
 #grid .plot.b{touch-action:none}
 #dragGhost{position:fixed;z-index:999;pointer-events:none;opacity:.85;transform:scale(1.1) rotate(-3deg);filter:drop-shadow(0 8px 6px #0004)}
@@ -231,6 +231,8 @@ button{font-family:inherit;color:var(--o)}
 .mkrow{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;background:#fffaf0;border:2px solid var(--o);border-radius:12px;padding:6px 8px;margin:5px 0}.mkrow b{font-family:Jua;font-weight:400}.mkrow div{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:8px 0}.dday{background:#f4f1f8;border:2px solid var(--o);border-radius:12px;text-align:center;padding:4px 2px;opacity:.6}.dday.on{background:#ffe066;opacity:1}.dday b{display:block;font-size:22px}.dday small{font-size:11px}
 .cpform{display:grid;grid-template-columns:1fr 1fr;gap:6px}.cpform label{font-size:13px;display:flex;flex-direction:column;gap:2px}.cpform input{font:15px Jua;border:2.5px solid var(--o);border-radius:10px;padding:4px 8px;color:var(--o)}
+#newVer{position:fixed;right:10px;bottom:96px;z-index:60;background:#fff3bf;border:3px solid var(--o);border-radius:99px;padding:5px 6px 5px 14px;font-family:Jua;box-shadow:0 4px 0 var(--o);display:flex;gap:8px;align-items:center}
+.verlab{position:absolute;right:12px;bottom:8px;font-size:11px;color:#a99bb8}
 </style></head><body>
 <div id="land"></div>
 <div id="stage"><div id="island"><div id="grid"></div></div></div>
@@ -1508,7 +1510,7 @@ function openM(html,tag='m'){$('#mbox').innerHTML=(tag==='battle'||tag==='atkale
 function closeM(){if(mOpen==='battle'||mOpen==='atkalert'||mOpen==='exam')return;$('#mw').style.display='none';mOpen=null;Q=null;checkPending()}
 function floatAt(el,txt,color){const r=el.getBoundingClientRect();const f=document.createElement('div');f.className='float';f.style.left=(r.left+r.width/2)+'px';f.style.top=(r.top+r.height*.2)+'px';f.style.color=color||O;f.textContent=txt;document.body.appendChild(f);setTimeout(()=>f.remove(),1500)}
 function confetti(){const cs=['#ffcf3f','#ff8fab','#7ec8ff','#8ee07a','#b388ff'];for(let i=0;i<60;i++){const c=document.createElement('div');c.className='conf';c.style.left=Math.random()*100+'vw';c.style.background=rnd(cs);c.style.animationDelay=Math.random()*.6+'s';c.style.animationDuration=(1.8+Math.random()*1.4)+'s';c.style.borderRadius=Math.random()<.5?'50%':'2px';document.body.appendChild(c);setTimeout(()=>c.remove(),3800)}}
-function fit(){const top=$('#top').getBoundingClientRect().bottom||60;const w=innerWidth-36,h=innerHeight-top-110;const c=Math.max(36,Math.floor(Math.min(w/(COLS+(innerWidth<640?.9:1.3)),h/(ROWS+1.6),128)));document.documentElement.style.setProperty('--c',c+'px');$('#stage').style.paddingTop=(top-20)+'px'}
+function fit(){const top=$('#top').getBoundingClientRect().bottom||60;document.documentElement.style.setProperty('--topH',top+'px');const w=innerWidth-36,h=innerHeight-top-110;const c=Math.max(36,Math.floor(Math.min(w/(COLS+(innerWidth<640?.9:1.3)),h/(ROWS+1.6),128)));document.documentElement.style.setProperty('--c',c+'px');$('#stage').style.paddingTop=(top-20)+'px'}
 addEventListener('resize',fit);
 
 /* ---------- render ---------- */
@@ -2287,7 +2289,7 @@ function openSettings(){const on=!!dbUrl();openM(`<h2>⚙️ 설정</h2>
 function openHub(){if(examGuard())return;snd('click');const b=(ic,n,d,f)=>`<button class="hubb" onclick="${f}"><span>${ic}</span><b>${n}</b><small>${d}</small></button>`;
  openM(`<h2>📚 더보기</h2>${examAvail()?`<div class="exbanner" onclick="examIntro()">📝 <b>${esc(S.cls.name)}</b> 시험이 기다리고 있어요! (${S.cls.exam.n}문제 · ${S.cls.exam.min}분) <u>시험 보기 ▶</u></div>`:''}<div class="hub">${b('📒','연구 노트','정답률·오답·결과 코드','openReport()')}${b('🧪','기술 연구',`연구점수 ${S.rp||0}`,'openTech()')}${b('📖','과학 도감',`${Object.keys(S.dex).length}장 수집`,'openDex()')}${b('🏆','업적',`${Object.keys(S.ach).length}/${ACH.length} · ${score()}점`,'openAch()')}${S.cls&&S.cls.room?b('🏫','반 대항전','반끼리 점수 경쟁','openLeagueStu()'):''}${b('👩‍🏫','선생님 모드','수업·퀴즈쇼·온라인 반','openTeacher()')}${b('🏪','시장','자원 팔아 골드',"openMarket()")}${b('🎁','출석 보상',`${S.dStreak||0}일 연속`,'showDaily(true)')}${b('🎟️','쿠폰','코드 입력하고 보상 받기','openCoupon()')}${b('📸','사진 찍기','마을·지도 저장','openPhoto()')}${b('📢','업데이트 내용',VERSION+' 패치 노트','showPatch()')}${b('⚙️','설정','반 코드·클라우드·소리','openSettings()')}</div>`,'hub')}
 function showTitle(){const sv=load();const t=$('#title');t.style.display='flex';started=false;const on=!!dbUrl();
- t.innerHTML=`<div class="tcard"><div style="width:150px;height:130px;margin:0 auto">${artOf('castle',7)}</div><div class="logo">과학 <span>킹덤</span></div><p class="j" style="font-size:16px;margin:4px 0 10px">과학 문제를 풀어 나만의 왕국을 키워요!</p>
+ t.innerHTML=`<div class="tcard" style="position:relative"><div style="width:150px;height:130px;margin:0 auto">${artOf('castle',7)}</div><div class="logo">과학 <span>킹덤</span></div><div class="verlab">${VERSION} · ${BUILD}</div><p class="j" style="font-size:16px;margin:4px 0 10px">과학 문제를 풀어 나만의 왕국을 키워요!</p>
  ${sv?`<button class="btn main" style="width:100%;margin-bottom:10px" onclick="startGame(true)">▶ 이어하기 · ${esc(sv.name)} (Lv${sv.k})</button><p style="font-size:13px;margin-bottom:4px">또는 새 왕국 만들기</p>`:''}
  <input id="kn" maxlength="10" placeholder="왕국 이름 (예: 우치 왕국)">
  <p class="j" style="text-align:left;margin-top:6px">📚 내 학년</p><div class="lvg" id="lvg"></div>
@@ -2569,8 +2571,8 @@ async function takePhoto(kind){snd('click');const el=$('#photo');el.innerHTML='�
  const png=await svgToPng(svgS,w,h);snd('coin');el.innerHTML=`<img src="${png}" style="width:100%;border:3px solid ${O};border-radius:14px"><div class="row"><a class="btn main" href="${png}" download="과학킹덤_${esc(S.name)}_${name}.png" style="text-decoration:none">💾 사진 저장</a></div>`}catch(e){el.innerHTML='⚠️ 사진을 만들지 못했어요. 다른 브라우저(크롬)에서 다시 해 보세요.'}}
 
 /* 📢 패치 노트 */
-const VERSION='v7';const BUILD='1794826571';
-(async()=>{try{if(location.protocol!=='https:')return;const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='(\d+)'/);if(m&&m[1]!==BUILD&&!started){const k='sk-reload-'+m[1];if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,1);location.replace(location.pathname+'?v='+m[1])}}catch(e){}})();
+const VERSION='v7';const BUILD='1794827813';
+(async()=>{try{if(location.protocol!=='https:')return;const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='(\d+)'/);if(m&&m[1]!==BUILD){if(!started){const k='sk-reload-'+m[1];if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,1);location.replace(location.pathname+'?v='+m[1]);return}}const d=document.createElement('div');d.id='newVer';d.innerHTML='🆕 새 버전이 나왔어요! <button class="btn sm main" onclick="save();location.replace(location.pathname+\'?v='+m[1]+'\')">업데이트</button>';document.body.appendChild(d)}}catch(e){}})();
 const PATCH=[
  {v:'v7',t:'🌍 세계로 나아가자!',items:['🎟️ <b>쿠폰 코드</b>: 📚더보기 › 🎟️쿠폰에서 코드를 입력하면 보상! 선생님은 선생님 모드에서 보상 쿠폰을 만들 수 있어요','💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지</b>: 너무 빨리 계속 맞히면 경고 후 왕국이 삭제돼요'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
  {v:'v6',t:'👩‍🏫 선생님 모드 업데이트',items:['직접 문제 출제 · 시험 모드','문항 분석 · 학생 상세 보기','결과 코드 위조 방지 · QR 입장','칠판 퀴즈쇼']},
