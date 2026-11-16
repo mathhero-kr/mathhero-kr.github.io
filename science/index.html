@@ -1630,7 +1630,7 @@ function tutorial(){openM(`<h2>🏰 과학 킹덤에 온 걸 환영해요!</h2><
 /* ---------- title ---------- */
 let tLvl='e56';
 function drawLvg(){$('#lvg').innerHTML=Object.keys(LEVELS).map(k=>`<button class="lvb ${tLvl===k?'on':''}" onclick="tLvl='${k}';drawLvg()">${LEVELS[k][1]}<small>${LEVELS[k][0]}</small></button>`).join('')}
-function startGame(cont,b){if(cont){S=load();if(!S)return}else{const sv=load();if(sv&&b&&!b.dataset.ok){b.dataset.ok=1;b.textContent='⚠️ 기존 왕국이 사라져요! 한 번 더 누르면 새로 시작';return}const n=($('#kn').value||'').trim()||'과학 왕국';S=migrate(fresh(n,tLvl))}
+function startGame(cont,b){if(cont){S=load();if(!S)return;if(cheatOnLoad())return}else{const sv=load();if(sv&&b&&!b.dataset.ok){b.dataset.ok=1;b.textContent='⚠️ 기존 왕국이 사라져요! 한 번 더 누르면 새로 시작';return}const n=($('#kn').value||'').trim()||'과학 왕국';S=migrate(fresh(n,tLvl))}
  $('#title').style.display='none';started=true;VIEW=null;setTimeout(()=>whenFree(()=>showDaily()),1500);setTimeout(checkNotice,2500);renderTop();fit();renderMap();renderQuest();renderCrisis();save();
  if(!cont){S.seenVer=VERSION;tutorial()}else{offline();if(S.seenVer!==VERSION){S.seenVer=VERSION;save();setTimeout(()=>whenFree(showPatch),900)}}setTimeout(()=>{if(S.exam)showExam();else checkJoinLink()},300)}
 function offline(){const el=Math.min(1800,(Date.now()-S.last)/1000);if(el<60)return;const r=rates();const g={};let any=false;for(const k of RK){g[k]=Math.floor(r[k]*el/60*.5);if(g[k]>0){S.res[k]+=g[k];any=true}}if(!any)return;renderTop();
@@ -2025,7 +2025,7 @@ function aiTurn(){if(S.play<360||S.k<2)return;
   else if(N.ally&&Math.random()<.2){const k=FIELDS[NAT[i].f].r,v=20*S.k;S.res[k]+=v;news(`🎁 동맹 ${jo(NAT[i].n,'이','가')} ${RES[k].ic}${v}을(를) 보냈어요`)}
   else if(!N.war&&Math.random()<.08){N.rel=Math.max(-100,Math.min(100,N.rel+rnd([-8,-5,5,8])))}
  });
- for(const w of myTerr()){const ly=S.loy[w.id]??60;if(ly<25&&!(S.dev&&S.dev.noRevolt)&&Math.random()<(25-ly)/50){const G=S.garr[w.id];
+ for(const w of myTerr()){const ly=S.loy[w.id]??60;if(ly<25&&!(isDev()&&S.dev.noRevolt)&&Math.random()<(25-ly)/50){const G=S.garr[w.id];
   if(G&&tc(G.t)>=30){UK.forEach(k=>G.t[k]=Math.floor((G.t[k]||0)*.7));S.loy[w.id]=ly+15;news(`⚠️ ${w.n}에서 반란이 일어났지만 주둔군이 진압했어요`)}
   else if(!inRevolt(w.id)){S.revolt=S.revolt||{};S.revolt[w.id]=S.play+180;snd('alarm');news(`🔥 ${w.n}에서 반란! 3분 안에 민심을 40으로 올리거나 주둔군 30명을 보내 진압하지 않으면 독립해요!`)}}}
  aiDiplo();cultureTurn();aiExpand();if(Math.random()<.5)aiExpand();renderTop();renderWorld()}
@@ -2035,7 +2035,7 @@ function warTick(dt){revoltTick();S.rp=(S.rp||0)+sumLv('lab')*(hasT('quantum')?2
  if(S.res.life<=0.5&&tc()+garrTotal()>0){S.morale=Math.max(10,S.morale-dt/60*4)}else if(S.morale<70)S.morale=Math.min(70,S.morale+dt/60*1.5);
  const lb=.6+.15*(sumLv('school')+sumLv('library'))+happy()*.02+.15*cultLv();for(const w of myTerr()){let l=S.loy[w.id]??60;l+=dt/60*(lb+(S.garr[w.id]&&tc(S.garr[w.id].t)>0?.5:0)-(S.morale<30?1.2:0)-(seasonIdx()===3?.3:0));S.loy[w.id]=Math.max(0,Math.min(100,l))}
  const si=seasonIdx();if(si!==S.lastSeason){S.lastSeason=si;const SE=SEASONS[si];toast(`${SE.ic} ${yearN()}년 ${SE.n}이 왔어요! ${SE.d}`,3500);renderTop()}
- S.aiT+=dt*(S.dev&&S.dev.fastAI?2:1);if(S.aiT>=80){S.aiT=0;aiTurn()}
+ S.aiT+=dt*(isDev()&&S.dev.fastAI?2:1);if(S.aiT>=80){S.aiT=0;aiTurn()}
  scenTick();_achT+=dt;if(_achT>=2){_achT=0;checkAch()}}
 
 /* ===================== v5: 더보기 허브 ===================== */
@@ -2493,7 +2493,7 @@ function bAnswer(i,ev){if(!B||B.done||i>=B.q.opts.length)return;const q=B.q;let 
  $('#qres').innerHTML=`<div class="res ${ok?'ok':'no'}"><p>${line}</p>${ok?'':`<p>정답: <b style="color:#2b8a3e">${q.a}</b></p>`}<p style="font-size:14px">💡 ${q.ex}</p></div><div class="row"><button class="btn main" onclick="bNext()">${end?'⚔️ 결과 보기':'다음 라운드 ▶'}</button></div>`;
  renderTop();save()}
 function bNext(){if(!B||!B.done)return;if(bEnd())resolveBattle();else nextBQ()}
-function resolveBattle(){if(!B)return;const s=sk(B.g);const win=(S.dev&&S.dev.god)||(!B.naval||B.nl<=0)&&(!B.naval||B.fl>.001)&&(!B.siege||B.wl<=0)&&(B.fe<=.001||(B.fm>.001&&B.P0*B.fm>B.E0*B.fe));const w=WORLD[B.tid];
+function resolveBattle(){if(!B)return;const s=sk(B.g);const win=(isDev()&&S.dev.god)||(!B.naval||B.nl<=0)&&(!B.naval||B.fl>.001)&&(!B.siege||B.wl<=0)&&(B.fe<=.001||(B.fm>.001&&B.P0*B.fm>B.E0*B.fe));const w=WORLD[B.tid];
  let keep=B.fm;if(s==='heal')keep+=(1-keep)*.3;if(hasT('med'))keep+=(1-keep)*.15;
  const tgtT=B.src==='main'?S.troops:(S.garr[B.tid]?S.garr[B.tid].t:{});const before=tc(tgtT);UK.forEach(k=>tgtT[k]=Math.max(0,Math.floor((B.my0[k]||0)*keep)));const lost=before-tc(tgtT);
  let shipLost=0;if(B.naval){const f0=S.fleet||0;S.fleet=Math.max(0,Math.round(f0*Math.max(0,B.fl)));shipLost=f0-S.fleet}let airLost=0;if(B.air){airLost=Math.min(S.air||0,Math.round(B.air*((1-Math.min(1,keep))*.5+(B.aa?.1:0))));S.air=(S.air||0)-airLost}
@@ -2515,11 +2515,11 @@ function resolveBattle(){if(!B)return;const s=sk(B.g);const win=(S.dev&&S.dev.go
    h=`<h2 style="text-align:center">🛡️ 방어 성공!</h2><p style="text-align:center;margin:8px 0">적군을 물리쳤어요! 우리 피해 ${fmt(lost)}명</p><div class="req"><span class="rw">💰+${g}</span><span class="rw">🔥 사기 +8</span>${extraR}</div>`}
   else{S.morale=Math.max(10,S.morale-12);snd('no');let lt;
    if(B.tid!==0){S.terr[B.tid]=B.ni;delete S.garr[B.tid];delete S.loy[B.tid];lt=`<b>${jo(w.n,'을','를')}</b> 빼앗겼어요... 주둔군도 흩어졌어요.`;news(`😢 ${NAT[B.ni].n}에게 ${jo(w.n,'을','를')} 빼앗겼어요`)}
-   else if(S.dev&&S.dev.noOver){lt='🛠️ (게임 오버 금지 모드) 수도는 지켜졌어요';}else{GO=true;lt='🏰 수도가 함락됐어요…'}
+   else if(isDev()&&S.dev.noOver){lt='🛠️ (게임 오버 금지 모드) 수도는 지켜졌어요';}else{GO=true;lt='🏰 수도가 함락됐어요…'}
    h=`<h2 style="text-align:center">😢 방어 실패</h2><p style="text-align:center;margin:8px 0">${lt}</p><div class="req">${extraR}</div><p style="text-align:center;font-size:14px">우리 피해 ${fmt(lost)}명 · 💡 주둔군을 늘리고 성을 키우면 방어가 쉬워져요</p>`}}
  if(s==='herb')S.morale=Math.min(100,S.morale+10);
  B=null;openM(h+cap+`<div class="row"><button class="btn main" onclick="closeM()">확인</button></div>`,'bres');bgmMode();renderTop();renderMap();fit();renderWorld();checkQuest();checkAch();save();if(GO)setTimeout(gameOver,600)}
-function defendStart(){const i=S.pendAtk;S.pendAtk=null;if(S.dev&&S.dev.peace)return;const N=S.nations[i];if(!N||N.fallen||!N.war)return;DEFAUX=[];
+function defendStart(){const i=S.pendAtk;S.pendAtk=null;if(isDev()&&S.dev.peace)return;const N=S.nations[i];if(!N||N.fallen||!N.war)return;DEFAUX=[];
  const near=myTerr().filter(w=>adjTo(w.id,i)).sort((a,b)=>tc((S.garr[a.id]||{t:{}}).t)-tc((S.garr[b.id]||{t:{}}).t));const tgt=near.length&&Math.random()<.75?near[0]:WORLD[0];
  const total=Math.round(N.pow*(.35+Math.random()*.25)*(1+S.k*.05));const en=splitC(total,NMIX[i]);const egen=S.ngens[i].length?rnd(S.ngens[i]):null;
  const home=tgt.id===0;const G=home?null:(S.garr[tgt.id]||{g:null,t:{}});
@@ -2587,7 +2587,7 @@ async function takePhoto(kind){snd('click');const el=$('#photo');el.innerHTML='�
  const png=await svgToPng(svgS,w,h);snd('coin');el.innerHTML=`<img src="${png}" style="width:100%;border:3px solid ${O};border-radius:14px"><div class="row"><a class="btn main" href="${png}" download="과학킹덤_${esc(S.name)}_${name}.png" style="text-decoration:none">💾 사진 저장</a></div>`}catch(e){el.innerHTML='⚠️ 사진을 만들지 못했어요. 다른 브라우저(크롬)에서 다시 해 보세요.'}}
 
 /* 📢 패치 노트 */
-const VERSION='v8';const BUILD='1794833618';
+const VERSION='v8';const BUILD='1794869332';
 (async()=>{try{if(location.protocol!=='https:')return;const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='(\d+)'/);if(m&&m[1]!==BUILD){if(!started){const k='sk-reload-'+m[1];if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,1);location.replace(location.pathname+'?v='+m[1]);return}}const d=document.createElement('div');d.id='newVer';d.innerHTML='🆕 새 버전이 나왔어요! <button class="btn sm main" onclick="save();location.replace(location.pathname+\'?v='+m[1]+'\')">업데이트</button>';document.body.appendChild(d)}}catch(e){}})();
 const PATCH=[
  {v:'v8',t:'🎓 영재와 문화',items:['🎓 <b>영재원</b>: 영재를 찾아 입학시키고, 그 분야 문제를 맞히거나 📖특별 수업으로 키워요','🎖️ 졸업한 영재는 <b>필살기를 골라 장수</b>가 되어요! 영재원 레벨이 높을수록 더 강하고, 🏋️특훈으로 능력치 최대 150까지 — <b>영재원 원툴</b>도 가능!','🌟 영재원 레벨이 높으면 <b>천재</b>가 나타나요 (능력 +15, 필살기 후보 5개)','🏛️ <b>내각 장관</b>(문화·재무·국방·과학기술·교육·외교부)이 되어 나라를 운영해요','🎭 <b>문화 업데이트</b>: 문화 점수를 모아 문화 레벨을 올리면 골드·민심·인구가 늘어요','🌍 <b>문화 흡수</b>: 문화가 높으면 이웃 땅이 전쟁 없이 스스로 합류해요!','🏛️ 새 건물: 영재원 · 과학 박물관 · 천체 투영관 · 과학 축제 광장 · 🎉과학 축제 개최','🏙️ <b>주거 발전</b>: 기술을 연구하면 🏘️빌라 → 🏢아파트 → 🏙️스카이 타워 → 🛰️우주 거주 돔! 주민이 많을수록 세금(골드)과 병력이 늘어요','🧪 <b>기술 강화</b>: 🚀우주 시대 기술 4개 추가 · 기술 하나마다 모든 생산 +2% · 기술이 앞서면 전투력 UP · 🔬과학 연구소가 연구점수를 자동으로 모아요']},
@@ -2612,7 +2612,11 @@ function macroSignals(ok,ev){const now=performance.now(),dt=now-MAC.t0;const r=[
   if(MAC.moves===MAC.moves0&&ev.pointerType==='mouse')r.push('마우스 안 움직임')}
  if(MAC.last){MAC.gaps.push(now-MAC.last);if(MAC.gaps.length>8)MAC.gaps.shift();const g=MAC.gaps;if(g.length>=8){const m=g.reduce((a,b)=>a+b,0)/g.length;const sd=Math.sqrt(g.reduce((a,b)=>a+(b-m)*(b-m),0)/g.length);if(sd<60&&m<6000)r.push('기계처럼 일정한 박자')}}
  MAC.last=now;return r}
-function macroCheck(ok,ev){if(!S||WIPED)return WIPED;if(S.dev&&S.dev.noMacro)return false;if(MAC.hc)return true;const sig=macroSignals(ok,ev);
+function macroCheck(ok,ev){if(!S||WIPED)return WIPED;if(isDev()&&S.dev.noMacro)return false;if(MAC.hc)return true;
+ const now=performance.now();
+ if(!ev||ev.isTrusted!==true){MAC.w.push(2);MAC.why=['자동 실행'];MAC.fake=(MAC.fake||0)+1;if(MAC.fake>=3){MAC.fake=0;MAC.w=[];macroHard('프로그램으로 직접 답 입력')}return true}
+ if(now-MAC.t0<350){MAC.w.push(1);if(MAC.w.length>10)MAC.w.shift();if(MAC.w.reduce((a,b)=>a+b,0)>=5){MAC.w=[];humanCheck()}return true}
+ MAC.ans=(MAC.ans||[]).filter(t=>now-t<60000);MAC.ans.push(now);if(MAC.ans.length>30){MAC.why=['1분에 30문제 넘게 풀기'];if(MAC.ans.length>45){MAC.ans=[];macroHard('1분에 45문제 넘게 풀기')}else humanCheck();return true}const sig=macroSignals(ok,ev);
  const hard=sig.includes('자동 클릭')||sig.includes('기계처럼 일정한 박자')||sig.includes('같은 자리 연타');
  MAC.w.push(sig.length?(hard?2:1):0);if(MAC.w.length>10)MAC.w.shift();MAC.why=sig.length?sig:MAC.why;
  if(MAC.w.reduce((a,b)=>a+b,0)>=5){MAC.w=[];MAC.gaps=[];MAC.clicks=[];humanCheck();return true}return false}
@@ -2621,13 +2625,18 @@ function macroStrike(){if(!S.macroWarn){S.macroWarn=1;save();macroWarnShow()}els
 const HC_SET=['🍎','🍌','🍇','🐶','🐱','🐸','⭐','🌙','🚀','🔬','🧲','🌋'];
 function humanCheck(){const pool=shuffle(HC_SET.slice()).slice(0,6);const ans=rnd(pool);const kind=rnd(['emoji','math']);let q,opts,a;
  if(kind==='math'){const x=2+Math.floor(Math.random()*7),y=2+Math.floor(Math.random()*7);a=String(x+y);q=`${x} + ${y} = ?`;const s=new Set([a]);while(s.size<6)s.add(String(x+y+Math.floor(Math.random()*9)-4));opts=shuffle([...s])}
- else{q=`「${ans}」 를 눌러 주세요`;opts=pool;a=ans}
+ else{q='__CV__';opts=pool;a=ans}
  MAC.hc={a,t:Date.now()+20000};snd('alarm');
- macroOverlay(`<div style="font-size:48px">🤖❓</div><h2>사람 확인!</h2><p>문제를 아주 빠르게(또는 기계처럼) 풀고 있어요.<br>사람이 맞는지 확인할게요. <b>20초</b> 안에 골라 주세요.</p><p class="j" style="font-size:28px;margin:8px 0">${q}</p><div class="hcbox">${opts.map(o=>`<button class="hcb" style="left:${5+Math.random()*75}%;top:${5+Math.random()*70}%" onclick="hcAns(this,event)">${o}</button>`).join('')}</div><p id="hct" style="font-size:13px;color:#8a7a9a"></p>`);
+ macroOverlay(`<div style="font-size:48px">🤖❓</div><h2>사람 확인!</h2><p>문제를 아주 빠르게(또는 기계처럼) 풀고 있어요.<br>사람이 맞는지 확인할게요. <b>20초</b> 안에 골라 주세요.</p><p class="j" style="font-size:28px;margin:8px 0">${q==='__CV__'?'<canvas id="hccv" width="260" height="60" style="width:260px;height:60px"></canvas>':'<canvas id="hccv" width="260" height="60" style="width:260px;height:60px"></canvas>'}</p><div class="hcbox">${opts.map(o=>`<button class="hcb" style="left:${5+Math.random()*75}%;top:${5+Math.random()*70}%" onclick="hcAns(this,event)">${o}</button>`).join('')}</div><p id="hct" style="font-size:13px;color:#8a7a9a"></p>`);
+ {const cv=$('#hccv'),g=cv.getContext('2d');g.clearRect(0,0,260,60);g.textAlign='center';g.textBaseline='middle';const txt=kind==='math'?q:`「 ${a} 」를 눌러요`;
+  for(let j=0;j<40;j++){g.fillStyle=`hsla(${Math.random()*360},70%,70%,.35)`;g.beginPath();g.arc(Math.random()*260,Math.random()*60,2+Math.random()*5,0,7);g.fill()}
+  g.font='bold 26px Jua, sans-serif';g.fillStyle='#4a3b5c';g.save();g.translate(130,32);g.rotate((Math.random()-.5)*.08);g.fillText(txt,0,0);g.restore();
+  for(let j=0;j<3;j++){g.strokeStyle='rgba(74,59,92,.25)';g.beginPath();g.moveTo(0,Math.random()*60);g.bezierCurveTo(80,Math.random()*60,180,Math.random()*60,260,Math.random()*60);g.stroke()}}
+ MAC.hcA=cyrb(a+SALT+'hc');MAC.hc={a:null,t:MAC.hc.t};
  // 버튼 겹침 방지: 격자에 흩뿌리기
  const bs=[...document.querySelectorAll('.hcb')];const cells=shuffle([...Array(12).keys()]);bs.forEach((b,i)=>{const c=cells[i];b.style.left=(3+(c%4)*24+Math.random()*3)+'%';b.style.top=(3+Math.floor(c/4)*32+Math.random()*2)+'%'});
  clearInterval(MAC.hcT);MAC.hcT=setInterval(()=>{if(!MAC.hc){clearInterval(MAC.hcT);return}const left=Math.ceil((MAC.hc.t-Date.now())/1000);const el=$('#hct');if(el)el.textContent=`⏱️ ${Math.max(0,left)}초`;if(left<=0){clearInterval(MAC.hcT);hcFail('시간 초과')}},250)}
-function hcAns(b,ev){if(!MAC.hc)return;if(!ev||ev.isTrusted===false)return hcFail('자동 클릭');if(b.textContent===MAC.hc.a){MAC.hc=null;clearInterval(MAC.hcT);snd('ok');$('#macro').style.display='none';toast('✅ 확인 완료! 문제를 천천히 읽고 풀어요 😊');markShown()}else hcFail('틀린 답')}
+function hcAns(b,ev){if(!MAC.hc)return;if(!ev||ev.isTrusted===false)return hcFail('자동 클릭');if(cyrb(b.textContent+SALT+'hc')===MAC.hcA){MAC.hc=null;MAC.ans=[];MAC.fake=0;clearInterval(MAC.hcT);snd('ok');$('#macro').style.display='none';toast('✅ 확인 완료! 문제를 천천히 읽고 풀어요 😊');markShown()}else hcFail('틀린 답')}
 function hcFail(why){MAC.hc=null;clearInterval(MAC.hcT);MAC.why=[why];macroStrike()}
 function macroOverlay(html){let d=$('#macro');if(!d){d=document.createElement('div');d.id='macro';document.body.appendChild(d)}d.innerHTML=`<div class="mbox2">${html}</div>`;d.style.display='flex'}
 function macroWarnShow(){snd('alarm');macroOverlay(`<div style="font-size:60px">🤖⚠️</div><h2>경고! 매크로가 의심돼요!</h2><p>${MAC.why&&MAC.why.length?`<small>감지: ${MAC.why.join(', ')}</small><br>`:''}문제를 직접 읽고 풀어야 해요.<br>매크로(자동 클릭) 프로그램은 쓸 수 없어요.</p><p style="color:#c0392b;font-family:Jua;font-size:18px">한 번 더 감지되면 왕국이 <u>삭제</u>돼요!</p><button class="btn main" onclick="$('#macro').style.display='none';markShown()">알겠어요, 천천히 풀게요</button>`)}
@@ -2643,7 +2652,7 @@ function wrongRec(q,i){return{lv:S.lvl,f:q.f,q:q.q,a:q.ra||q.a,my:q.type==='ox'?
 
 
 /* 👑 프로필 · 칭호 */
-function myTitles(){const L=[['🌱 새싹 과학자','처음 왕국을 세우면']];if(S.dev&&S.dev.on)L.push(['🛠️ 개발자','개발자 모드']);if(S.dev&&S.dev.allTitles){L.push(['👑 창조주','개발자 전용'],['🏯 성주','성 Lv5 달성'],['👑 과학 황제','성 Lv8 달성'],['🔥 연속 정답왕','10연속 정답'],['📚 문제 박사','문제 500개 정답'],['⚔️ 정복왕','나라 3곳 항복'],['⛵ 대항해가','다른 대륙 땅 차지'],['🎓 영재 사관학교장','영재 장수 3명'],['🌟 천재 발굴가','천재 발견']);Object.keys(LEVELS).forEach(l=>FK.forEach(f=>L.push(['🎓 '+LEVELS[l][1]+' '+FIELDS[f].n+' 박사','도감 완성'])))}((S.dev&&S.dev.custom)||[]).forEach(t=>L.push([t,'✨ 직접 만든 칭호']));
+function myTitles(){const L=[['🌱 새싹 과학자','처음 왕국을 세우면']];if(isDev())L.push(['🛠️ 개발자','개발자 모드']);if(isDev()&&S.dev.allTitles){L.push(['👑 창조주','개발자 전용'],['🏯 성주','성 Lv5 달성'],['👑 과학 황제','성 Lv8 달성'],['🔥 연속 정답왕','10연속 정답'],['📚 문제 박사','문제 500개 정답'],['⚔️ 정복왕','나라 3곳 항복'],['⛵ 대항해가','다른 대륙 땅 차지'],['🎓 영재 사관학교장','영재 장수 3명'],['🌟 천재 발굴가','천재 발견']);Object.keys(LEVELS).forEach(l=>FK.forEach(f=>L.push(['🎓 '+LEVELS[l][1]+' '+FIELDS[f].n+' 박사','도감 완성'])))}((isDev()&&S.dev.custom)||[]).forEach(t=>L.push([t,'✨ 직접 만든 칭호']));
  (S.titles||[]).forEach(t=>L.push(['🎓 '+t,'도감 한 분야 완성']));
  ACH.forEach(a=>{if(S.ach&&S.ach[a[0]])L.push([a[1],'업적: '+a[2]])});
  if(S.k>=5)L.push(['🏯 성주','성 Lv5 달성']);if(S.k>=8)L.push(['👑 과학 황제','성 Lv8 달성']);
@@ -2736,7 +2745,7 @@ function independence(id){const w=WORLD[id];S.rebels=S.rebels||[];const r={n:`${
  S.nations.push({rel:-80,pow:150+25*S.k+Math.round(tc((S.garr[id]||{t:{}}).t)),war:true,ally:false,trade:false,fallen:false});S.ngens[i]=[];aiInit(S);
  S.terr[id]=i;delete S.garr[id];delete S.loy[id];delete S.revolt[id];snd('alarm');news(`✊ ${jo(w.n,'이','가')} 독립을 선언했어요! 「${r.n}」과(와) 전쟁 상태예요`);
  if(VIEW===id){VIEW=null;renderMap()}renderTop();renderWorld()}
-function revoltTick(){S.revolt=S.revolt||{};if(S.dev&&S.dev.noRevolt){S.revolt={};return}for(const id in S.revolt){const w=WORLD[id];if(S.terr[id]!=='me'){delete S.revolt[id];continue}
+function revoltTick(){S.revolt=S.revolt||{};if(isDev()&&S.dev.noRevolt){S.revolt={};return}for(const id in S.revolt){const w=WORLD[id];if(S.terr[id]!=='me'){delete S.revolt[id];continue}
  const G=S.garr[id];if((S.loy[id]??0)>=40||(G&&tc(G.t)>=30)){delete S.revolt[id];S.loy[id]=Math.max(S.loy[id]??0,45);snd('lv');news(`🕊️ ${w.n}의 반란을 진압했어요!`);renderWorld();continue}
  if(S.play>=S.revolt[id])independence(+id)}}
 const inRevolt=id=>!!(S.revolt&&S.revolt[id]);
@@ -2793,7 +2802,7 @@ function cpReward(c){const parts=[];if(c.r)for(const k in c.r){S.res[k]=(S.res[k
  if(c.item){const k=rnd(Object.keys(ITEMS));S.items.push(k);parts.push('🎁'+ITEMS[k].ic+ITEMS[k].n)}if(c.inf){S.troops.inf+=c.inf;parts.push('🛡️병사 '+c.inf+'명')}return parts}
 function useCoupon(){const el=$('#cpin');const raw=(el.value||'').trim();if(!raw)return;S.usedCp=S.usedCp||[];let c=null,id=null;
  if(raw.startsWith('SK')){try{const v=b64v(raw);if(v.sig==='ok'&&v.o.cp){c=v.o;id='T'+v.o.id;if(v.o.exp&&Date.now()>v.o.exp){snd('no');return cpMsg('⏰ 기간이 지난 쿠폰이에요','#c0392b')}}}catch(e){}}
- else{const code=raw.toUpperCase().replace(/\s/g,'');if(cyrb(code+SALT+'dev')===DEVH){D().on=true;save();snd('lv');confetti();el.value='';cpMsg('🛠️ 개발자 모드 ON! 📚더보기 › 🛠️개발자 메뉴','#7b5cd6');renderTop();return}const h=cyrb(code+SALT+'cp');if(CPN[h]){c=CPN[h];id=h}}
+ else{const code=raw.toUpperCase().replace(/\s/g,'');if(cyrb(code+SALT+'dev')===DEVH){D().on=true;S.dev.k=code;save();snd('lv');confetti();el.value='';cpMsg('🛠️ 개발자 모드 ON! 📚더보기 › 🛠️개발자 메뉴','#7b5cd6');renderTop();return}const h=cyrb(code+SALT+'cp');if(CPN[h]){c=CPN[h];id=h}}
  if(!c){snd('no');return cpMsg('❌ 없는 쿠폰 코드예요. 다시 확인해 주세요','#c0392b')}
  if(S.usedCp.includes(id)){snd('no');return cpMsg('✅ 이미 사용한 쿠폰이에요','#8a7a9a')}
  S.usedCp.push(id);S.cpLog=S.cpLog||[];S.cpLog.unshift(c.n||'선생님 쿠폰');const parts=cpReward(c);snd('lv');confetti();renderTop();save();el.value='';
@@ -2943,7 +2952,7 @@ function techSummary(){const tl=myTL();const ai=(S.ntech||[]).map((v,i)=>[v||0,i
  <p style="font-size:13px;color:#8a7a9a">💡 기술 하나마다 <b>모든 생산 +2%</b>. 상대 나라보다 기술 레벨이 높으면 전투력이 레벨 차이당 +5% (낮으면 -5%)! 🏘️빌라 → 🏢아파트 → 🏙️스카이 타워 → 🛰️우주 돔으로 주민을 늘려요.</p>`}
 /* ===================== 🛠️ 개발자 모드 ===================== */
 const DEVH='bi8p3mi0cj';
-const isDev=()=>!!(S&&S.dev&&S.dev.on);
+const isDev=()=>!!(S&&S.dev&&S.dev.on&&S.dev.k&&cyrb(String(S.dev.k)+SALT+'dev')===DEVH);
 const D=()=>S.dev=S.dev||{};
 let devTab='me';
 function devToggle(k){D()[k]=!S.dev[k];snd('click');save();openDev()}
@@ -3002,6 +3011,13 @@ let _pendNotice=null;
 async function checkNotice(){try{if(location.protocol!=='https:')return;const r=await fetch('notice.json?nc='+Date.now(),{cache:'no-store'});if(!r.ok)return;const o=await r.json();window._notice=o;if(o&&o.msg&&S&&S.seenNotice!==o.id)_pendNotice=o}catch(e){}}
 setInterval(()=>{if(started&&S&&document.visibilityState==='visible')checkNotice()},45000);
 setInterval(()=>{if(_pendNotice&&started&&S&&!mOpen&&!(MAC&&MAC.hc)){const o=_pendNotice;_pendNotice=null;if(S.seenNotice!==o.id)showNotice(o)}},1500);
+
+
+/* 🛡️ 치트 방지: 비율 감시 · 함수 잠금 */
+(()=>{let t0=null,n0=0,acc=0;setInterval(()=>{if(!started||!S||WIPED||(isDev()&&S.dev.noMacro))return;const now=Date.now();if(t0==null){t0=now;n0=S.total+S.tries;return}
+ if(now-t0>=60000){const d=(S.total+S.tries)-n0;t0=now;n0=S.total+S.tries;if(d>50){MAC.why=[`1분에 ${d}문제 (사람은 불가능)`];macroHard(MAC.why[0])}}},2000)})();
+function cheatOnLoad(){if(!S||(isDev()&&S.dev.noMacro))return false;const min=(S.play||0)/60;if((S.total||0)>1000&&min>0&&S.total/min>20){MAC.why=[`평균 1분에 ${Math.round(S.total/min)}문제`];macroWipe();return true}return false}
+['answer','bAnswer','ivAns','exAns','klAns','ktAns','macroCheck','macroSignals','macroStrike','macroHard','macroWipe','macroWarnShow','humanCheck','hcAns','hcFail','markShown','gainCorrect','save','cheatOnLoad','isDev','cyrb'].forEach(n=>{try{Object.defineProperty(window,n,{writable:false})}catch(e){}});
 
 /* ---------- loop ---------- */
 let lastT=Date.now(),floatT=0,saveT=0,vilT=0;
