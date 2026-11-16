@@ -230,6 +230,7 @@ button{font-family:inherit;color:var(--o)}
 .qtag.gold{background:linear-gradient(90deg,#ffe066,#ffb84d);animation:pls 1.2s ease-in-out infinite}
 .mkrow{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;background:#fffaf0;border:2px solid var(--o);border-radius:12px;padding:6px 8px;margin:5px 0}.mkrow b{font-family:Jua;font-weight:400}.mkrow div{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:8px 0}.dday{background:#f4f1f8;border:2px solid var(--o);border-radius:12px;text-align:center;padding:4px 2px;opacity:.6}.dday.on{background:#ffe066;opacity:1}.dday b{display:block;font-size:22px}.dday small{font-size:11px}
+.cpform{display:grid;grid-template-columns:1fr 1fr;gap:6px}.cpform label{font-size:13px;display:flex;flex-direction:column;gap:2px}.cpform input{font:15px Jua;border:2.5px solid var(--o);border-radius:10px;padding:4px 8px;color:var(--o)}
 </style></head><body>
 <div id="land"></div>
 <div id="stage"><div id="island"><div id="grid"></div></div></div>
@@ -2139,9 +2140,9 @@ function delTQ(i){TQ.splice(i,1);saveTQ();openTeacher('make')}
 let tTab='make',lastRS=[],liveRoom=null,liveT=null,leagueCode='',leagueT=null;
 function tabBtn(k,n){return `<button class="chip ${tTab===k?'on':''}" onclick="openTeacher('${k}')">${n}</button>`}
 function openTeacher(tab){if(tab)tTab=tab;if(tTab!=='live'){clearInterval(liveT);liveT=null}
- const tabs=`<div class="chips" style="margin:2px 40px 10px 0">${tabBtn('make','🎫 수업 만들기')}${tabBtn('col','📊 결과 모으기')}${tabBtn('show','📺 칠판 퀴즈쇼')}${dbUrl()?tabBtn('live','🌐 온라인 반'):''}</div>`;
+ const tabs=`<div class="chips" style="margin:2px 40px 10px 0">${tabBtn('make','🎫 수업 만들기')}${tabBtn('col','📊 결과 모으기')}${tabBtn('show','📺 칠판 퀴즈쇼')}${tabBtn('cp','🎟️ 보상 쿠폰')}${dbUrl()?tabBtn('live','🌐 온라인 반'):''}</div>`;
  let body='';
- if(tTab==='make')body=makeForm('make');
+ if(tTab==='make')body=makeForm('make');else if(tTab==='cp')body=cpForm();
  else if(tTab==='col')body=`<p style="font-size:14px">학생들의 <b>결과 코드</b>를 한 줄에 하나씩 붙여 넣으세요. 고쳐진 코드는 <b>⚠️ 변조</b>로 표시돼요.</p><textarea id="tcol" class="tcode" style="height:110px" placeholder="SKeyJ0Ijoi...&#10;SKeyJ0Ijoi..."></textarea><div class="row"><button class="btn main" onclick="collect()">📊 결과 보기</button></div><div id="tres"></div>`;
  else if(tTab==='show')body=`<p style="font-size:14px">교실 화면(프로젝터)에 크게 띄워 반 전체가 함께 푸는 퀴즈쇼예요.</p>${makeForm('show')}`;
  else body=liveBody();
@@ -2284,7 +2285,7 @@ function openSettings(){const on=!!dbUrl();openM(`<h2>⚙️ 설정</h2>
  <p style="font-size:13px;color:#8a7a9a;margin-top:10px;text-align:center">진행 상황은 이 브라우저에 자동 저장돼요.${S.cloud?' ☁️ 클라우드에도 저장 중!':''}</p>
  <div class="row"><button class="btn sm pink" onclick="if(!this.dataset.ok){this.dataset.ok=1;this.textContent='⚠️ 정말 처음부터? (한 번 더)';return}localStorage.removeItem('sk-save');location.reload()">🗑️ 처음부터 다시</button></div>`,'set')}
 function openHub(){if(examGuard())return;snd('click');const b=(ic,n,d,f)=>`<button class="hubb" onclick="${f}"><span>${ic}</span><b>${n}</b><small>${d}</small></button>`;
- openM(`<h2>📚 더보기</h2>${examAvail()?`<div class="exbanner" onclick="examIntro()">📝 <b>${esc(S.cls.name)}</b> 시험이 기다리고 있어요! (${S.cls.exam.n}문제 · ${S.cls.exam.min}분) <u>시험 보기 ▶</u></div>`:''}<div class="hub">${b('📒','연구 노트','정답률·오답·결과 코드','openReport()')}${b('🧪','기술 연구',`연구점수 ${S.rp||0}`,'openTech()')}${b('📖','과학 도감',`${Object.keys(S.dex).length}장 수집`,'openDex()')}${b('🏆','업적',`${Object.keys(S.ach).length}/${ACH.length} · ${score()}점`,'openAch()')}${S.cls&&S.cls.room?b('🏫','반 대항전','반끼리 점수 경쟁','openLeagueStu()'):''}${b('👩‍🏫','선생님 모드','수업·퀴즈쇼·온라인 반','openTeacher()')}${b('🏪','시장','자원 팔아 골드',"openMarket()")}${b('🎁','출석 보상',`${S.dStreak||0}일 연속`,'showDaily(true)')}${b('📸','사진 찍기','마을·지도 저장','openPhoto()')}${b('📢','업데이트 내용',VERSION+' 패치 노트','showPatch()')}${b('⚙️','설정','반 코드·클라우드·소리','openSettings()')}</div>`,'hub')}
+ openM(`<h2>📚 더보기</h2>${examAvail()?`<div class="exbanner" onclick="examIntro()">📝 <b>${esc(S.cls.name)}</b> 시험이 기다리고 있어요! (${S.cls.exam.n}문제 · ${S.cls.exam.min}분) <u>시험 보기 ▶</u></div>`:''}<div class="hub">${b('📒','연구 노트','정답률·오답·결과 코드','openReport()')}${b('🧪','기술 연구',`연구점수 ${S.rp||0}`,'openTech()')}${b('📖','과학 도감',`${Object.keys(S.dex).length}장 수집`,'openDex()')}${b('🏆','업적',`${Object.keys(S.ach).length}/${ACH.length} · ${score()}점`,'openAch()')}${S.cls&&S.cls.room?b('🏫','반 대항전','반끼리 점수 경쟁','openLeagueStu()'):''}${b('👩‍🏫','선생님 모드','수업·퀴즈쇼·온라인 반','openTeacher()')}${b('🏪','시장','자원 팔아 골드',"openMarket()")}${b('🎁','출석 보상',`${S.dStreak||0}일 연속`,'showDaily(true)')}${b('🎟️','쿠폰','코드 입력하고 보상 받기','openCoupon()')}${b('📸','사진 찍기','마을·지도 저장','openPhoto()')}${b('📢','업데이트 내용',VERSION+' 패치 노트','showPatch()')}${b('⚙️','설정','반 코드·클라우드·소리','openSettings()')}</div>`,'hub')}
 function showTitle(){const sv=load();const t=$('#title');t.style.display='flex';started=false;const on=!!dbUrl();
  t.innerHTML=`<div class="tcard"><div style="width:150px;height:130px;margin:0 auto">${artOf('castle',7)}</div><div class="logo">과학 <span>킹덤</span></div><p class="j" style="font-size:16px;margin:4px 0 10px">과학 문제를 풀어 나만의 왕국을 키워요!</p>
  ${sv?`<button class="btn main" style="width:100%;margin-bottom:10px" onclick="startGame(true)">▶ 이어하기 · ${esc(sv.name)} (Lv${sv.k})</button><p style="font-size:13px;margin-bottom:4px">또는 새 왕국 만들기</p>`:''}
@@ -2568,10 +2569,10 @@ async function takePhoto(kind){snd('click');const el=$('#photo');el.innerHTML='�
  const png=await svgToPng(svgS,w,h);snd('coin');el.innerHTML=`<img src="${png}" style="width:100%;border:3px solid ${O};border-radius:14px"><div class="row"><a class="btn main" href="${png}" download="과학킹덤_${esc(S.name)}_${name}.png" style="text-decoration:none">💾 사진 저장</a></div>`}catch(e){el.innerHTML='⚠️ 사진을 만들지 못했어요. 다른 브라우저(크롬)에서 다시 해 보세요.'}}
 
 /* 📢 패치 노트 */
-const VERSION='v7';const BUILD='1794825733';
+const VERSION='v7';const BUILD='1794826571';
 (async()=>{try{if(location.protocol!=='https:')return;const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='(\d+)'/);if(m&&m[1]!==BUILD&&!started){const k='sk-reload-'+m[1];if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,1);location.replace(location.pathname+'?v='+m[1])}}catch(e){}})();
 const PATCH=[
- {v:'v7',t:'🌍 세계로 나아가자!',items:['💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지</b>: 너무 빨리 계속 맞히면 경고 후 왕국이 삭제돼요'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
+ {v:'v7',t:'🌍 세계로 나아가자!',items:['🎟️ <b>쿠폰 코드</b>: 📚더보기 › 🎟️쿠폰에서 코드를 입력하면 보상! 선생님은 선생님 모드에서 보상 쿠폰을 만들 수 있어요','💰 <b>골드 벌기</b>: 🏪과학 시장(자원 팔기) · 🌟황금 문제(골드 ×5) · 💸점령지 세금 · 🎁매일 출석 보상','🔀 <b>건물 옮기기</b>: 건물을 꾹 눌러 끌어다 놓거나, 건물 창의 🔀옮기기 버튼으로 자리를 바꿀 수 있어요','✊ <b>반란과 독립</b>: 반란이 난 땅을 3분 안에 진압하지 못하면 독립국이 되어 우리와 전쟁해요','🏰💥 <b>게임 오버</b>: 수도가 함락되면 왕국이 끝나요! 수도 방어를 단단히!','🏘️ <b>점령지 도시 건설</b>: 차지한 땅에 들어가 수도처럼 건물을 지을 수 있어요 (민심이 높을수록 땅이 넓어져요)','🧠 <b>똑똑해진 AI 나라</b>: 나라끼리 동맹·전쟁·휴전을 하고, 기술을 발명하고, 너무 강한 나라(우리 포함!)를 막으려 <b>연합</b>을 만들어요 — 🤝외교 › 🌐세계 정세','👑 <b>프로필 & 칭호</b>: 왼쪽 위 왕국 이름을 눌러 얻은 칭호 중 하나를 골라 달 수 있어요','🗺️ <b>세계 지도</b> 등장! 지금까지의 대륙은 <b>오세아니아</b>가 되고 아시아·유럽·아프리카·북아메리카·남아메리카가 열렸어요 (실제 나라 45곳 + 새 나라 5곳)','⛵ <b>해전</b>: 항구를 짓고 함선을 만들어 바다 건너 원정! 먼저 적 함대를 무찔러야 상륙해요','💞 동맹국에 <b>원군 요청</b>을 할 수 있어요','🌸 <b>장식 건물</b> 7종 (꽃밭·연못·동상·로켓…) — 행복이 오르면 민심과 인구가 늘어요','🏗️ 건설 메뉴에 <b>카테고리</b>(생활·생산·군사·장식)가 생겼어요','📸 <b>왕국 사진 찍기</b> — 마을과 지도를 이미지로 저장','📝 <b>새 문제 224개</b> + ⭕❌ OX 문제와 빈칸 문제 (학년마다 수백 가지!)','🎖️ 새 장수 12명 (유카와, 보어, 이븐 알하이삼, 프랭클린, 레이철 카슨 등)','🤖 <b>매크로 방지</b>: 너무 빨리 계속 맞히면 경고 후 왕국이 삭제돼요'],fix:['일부 버튼에 글꼴이 적용되지 않던 문제를 고쳤어요']},
  {v:'v6',t:'👩‍🏫 선생님 모드 업데이트',items:['직접 문제 출제 · 시험 모드','문항 분석 · 학생 상세 보기','결과 코드 위조 방지 · QR 입장','칠판 퀴즈쇼']},
  {v:'v5',t:'⚔️ 삼국지급 전쟁',items:['장수 성장·장비 · 책략 카드 · 공성전','주둔 부대 · 민심과 반란 · 계절','기술 트리 · 시나리오 · 업적 · 배경음악']}];
 function showPatch(){openM(`<h2 style="text-align:center">📢 업데이트 내용!</h2>${PATCH.map((p,i)=>`<div class="patch ${i?'old':''}"><h3>${p.v} · ${p.t}</h3>${i===0?`<p class="j" style="margin:4px 0">✨ 새로 추가</p>`:''}<ul>${p.items.map(x=>`<li>${x}</li>`).join('')}</ul>${p.fix?`<p class="j" style="margin:4px 0">🔧 고친 점</p><ul>${p.fix.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}</div>`).join('')}<div class="row"><button class="btn main" onclick="closeM()">확인! 🎮</button></div>`,'patch');snd('lv')}
@@ -2736,6 +2737,30 @@ function showDaily(force){const today=new Date().toDateString();
  if(S.daily===today){if(force)openM(`<h2 style="text-align:center">🎁 출석 보상</h2><p style="text-align:center;font:20px Jua;margin:10px 0">오늘은 이미 받았어요! 🔥 ${S.dStreak}일 연속</p><p style="text-align:center">내일 또 오면 더 많이 받아요 (최대 7일)</p><div class="row"><button class="btn main" onclick="closeM()">확인</button></div>`,'daily');return}
  const y=new Date(Date.now()-864e5).toDateString();S.dStreak=S.daily===y?(S.dStreak||0)+1:1;S.daily=today;const d=Math.min(7,S.dStreak);const g=50*S.k*d;S.res.gold+=g;save();renderTop();snd('lv');confetti();
  openM(`<h2 style="text-align:center">🎁 출석 보상!</h2><div class="dgrid">${[1,2,3,4,5,6,7].map(i=>`<div class="dday ${i<=d?'on':''}"><small>${i}일</small><b>${i<=d?'✅':'🎁'}</b><small>💰${50*S.k*i}</small></div>`).join('')}</div><p style="text-align:center;font:22px Jua;margin:8px 0">🔥 ${S.dStreak}일 연속 출석 · 💰+${fmt(g)}</p><div class="row"><button class="btn main" onclick="closeM()">받기!</button></div>`,'daily')}
+
+/* ===================== v7: 🎟️ 쿠폰 코드 ===================== */
+const CPN={'1d0txw75tiv':{n:'과학 킹덤 오픈 기념',r:{gold:1000,energy:300,element:300,life:300,mineral:300}},'23r6ji7v5f0':{n:'왕국 건설 응원',r:{gold:500}},
+ 't4bxsy406p':{n:'세계 지도 업데이트 기념',r:{gold:300},ship:5},'1cvqdecumk4':{n:'개발자 우치의 선물',r:{gold:777},item:1},'1idgp36bpqh':{n:'유레카!',r:{gold:200},rp:20}};
+function cpReward(c){const parts=[];if(c.r)for(const k in c.r){S.res[k]=(S.res[k]||0)+c.r[k];parts.push(RES[k].ic+fmt(c.r[k]))}
+ if(c.ship){S.fleet=(S.fleet||0)+c.ship;parts.push('⛵함선 '+c.ship+'척')}if(c.rp){S.rp=(S.rp||0)+c.rp;parts.push('🧪연구점수 '+c.rp)}
+ if(c.item){const k=rnd(Object.keys(ITEMS));S.items.push(k);parts.push('🎁'+ITEMS[k].ic+ITEMS[k].n)}if(c.inf){S.troops.inf+=c.inf;parts.push('🛡️병사 '+c.inf+'명')}return parts}
+function useCoupon(){const el=$('#cpin');const raw=(el.value||'').trim();if(!raw)return;S.usedCp=S.usedCp||[];let c=null,id=null;
+ if(raw.startsWith('SK')){try{const v=b64v(raw);if(v.sig==='ok'&&v.o.cp){c=v.o;id='T'+v.o.id;if(v.o.exp&&Date.now()>v.o.exp){snd('no');return cpMsg('⏰ 기간이 지난 쿠폰이에요','#c0392b')}}}catch(e){}}
+ else{const code=raw.toUpperCase().replace(/\s/g,'');const h=cyrb(code+SALT+'cp');if(CPN[h]){c=CPN[h];id=h}}
+ if(!c){snd('no');return cpMsg('❌ 없는 쿠폰 코드예요. 다시 확인해 주세요','#c0392b')}
+ if(S.usedCp.includes(id)){snd('no');return cpMsg('✅ 이미 사용한 쿠폰이에요','#8a7a9a')}
+ S.usedCp.push(id);S.cpLog=S.cpLog||[];S.cpLog.unshift(c.n||'선생님 쿠폰');const parts=cpReward(c);snd('lv');confetti();renderTop();save();el.value='';
+ cpMsg(`🎉 「${esc(c.n||'선생님 쿠폰')}」 쿠폰 사용 완료!<br>${parts.join(' · ')}`,'#2b8a3e')}
+function cpMsg(h,col){const m=$('#cpmsg');if(m)m.innerHTML=`<p style="text-align:center;font:18px Jua;color:${col};margin:8px 0">${h}</p>`}
+function openCoupon(){snd('click');openM(`<h2>🎟️ 쿠폰 입력</h2><p style="font-size:14px">선생님이나 이벤트로 받은 쿠폰 코드를 입력하면 보상을 받아요. 쿠폰은 한 번만 쓸 수 있어요.</p>
+ <div style="display:flex;gap:6px;margin:8px 0"><input id="cpin" placeholder="쿠폰 코드 입력" style="flex:1;font:18px Jua;border:3px solid ${O};border-radius:12px;padding:8px 12px;color:${O}" onkeydown="if(event.key==='Enter')useCoupon()"><button class="btn main" onclick="useCoupon()">입력</button></div><div id="cpmsg"></div>
+ ${(S.cpLog||[]).length?`<h3>📜 사용한 쿠폰</h3><div style="font-size:14px">${S.cpLog.map(n=>`<div class="wl">🎟️ ${esc(n)}</div>`).join('')}</div>`:''}<div class="row"><button class="btn" onclick="closeM()">닫기</button></div>`,'coupon');setTimeout(()=>{const e=$('#cpin');if(e)e.focus()},50)}
+function cpForm(){return `<p style="font-size:14px">학생들에게 줄 <b>보상 쿠폰</b>을 만들어요. 각 학생은 한 쿠폰을 한 번만 쓸 수 있고, 위조할 수 없어요.</p>
+ <div class="cpform"><label>쿠폰 이름 <input id="cpn" maxlength="20" value="수업 열심히 한 상"></label><label>💰 골드 <input id="cpg" type="number" min="0" max="99999" value="300"></label><label>🌈 모든 자원 <input id="cpa" type="number" min="0" max="99999" value="0"></label><label>🧪 연구점수 <input id="cpr" type="number" min="0" max="999" value="0"></label><label>🛡️ 병사 <input id="cpi" type="number" min="0" max="9999" value="0"></label><label>⏰ 유효 기간(일, 0=무제한) <input id="cpe" type="number" min="0" max="365" value="7"></label></div>
+ <div class="row"><button class="btn main" onclick="makeCoupon()">🎟️ 쿠폰 만들기</button></div><div id="cpout"></div>`}
+function makeCoupon(){const v=id=>Math.max(0,Math.floor(+$(id).value||0));const g=v('#cpg'),a=v('#cpa'),rp=v('#cpr'),inf=v('#cpi'),ex=v('#cpe');const r={};if(g)r.gold=g;if(a)['energy','element','life','mineral'].forEach(k=>r[k]=a);
+ if(!g&&!a&&!rp&&!inf)return toast('보상을 하나 이상 넣어 주세요');const o={cp:1,id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),n:($('#cpn').value||'선생님 쿠폰').slice(0,20),r};if(rp)o.rp=rp;if(inf)o.inf=inf;if(ex)o.exp=Date.now()+ex*864e5;
+ const code=b64e(o);snd('coin');$('#cpout').innerHTML=`<textarea readonly style="width:100%;height:70px;font-size:12px;border:3px solid ${O};border-radius:12px;padding:6px">${code}</textarea><div class="row"><button class="btn sm" onclick="copyText(this.parentNode.previousElementSibling.value,this)">📋 복사</button></div><p style="font-size:13px;color:#8a7a9a">학생은 📚더보기 › 🎟️쿠폰에 붙여 넣으면 돼요.</p>`}
 /* ---------- loop ---------- */
 let lastT=Date.now(),floatT=0,saveT=0,vilT=0;
 setInterval(()=>{const now=Date.now();const dt=Math.min(5,(now-lastT)/1000);lastT=now;if(!started||!S)return;
